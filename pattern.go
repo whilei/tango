@@ -2,11 +2,11 @@ package tango
 
 import (
     "fmt"
+    "github.com/gorilla/context"
+    "github.com/gorilla/mux"
     "io/ioutil"
     "net/http"
     "strings"
-    "tango/context"
-    "tango/mux"
     "time"
 )
 

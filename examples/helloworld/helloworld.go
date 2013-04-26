@@ -1,8 +1,8 @@
 package main
 
 import (
-    "tango"
-    "tango/middleware"
+    "github.com/cojac/tango"
+    "github.com/cojac/tango/middleware"
 )
 
 // Setup our only handler.
