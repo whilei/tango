@@ -2,8 +2,8 @@ package middleware
 
 import (
     "fmt"
-    "tango"
-    "tango/context"
+    "github.com/cojac/tango"
+    "github.com/gorilla/context"
     "time"
 )
 
