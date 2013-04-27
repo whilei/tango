@@ -5,13 +5,17 @@ import (
     "github.com/cojac/tango/middleware"
 )
 
-// Setup our only handler.
 type IndexHandler struct {
     tango.BaseHandler
 }
 
 func (h IndexHandler) Get(request *tango.HttpRequest) *tango.HttpResponse {
     return tango.NewHttpResponse("Hello, world")
+}
+
+func init() {
+    tango.Settings.Set("debug", true)
+    tango.Settings.Set("serve_address", ":8000")
 }
 
 func main() {

@@ -14,10 +14,10 @@ type RuntimeProfile struct {
 }
 
 func (m RuntimeProfile) ProcessRequest(request *tango.HttpRequest) {
-    context.Set(request.Raw, runTimeContextKey, time.Now())
+    context.Set(request.RawRequest, runTimeContextKey, time.Now())
 }
 
 func (m RuntimeProfile) ProcessResponse(request *tango.HttpRequest, response *tango.HttpResponse) {
-    started := context.Get(request.Raw, runTimeContextKey)
+    started := context.Get(request.RawRequest, runTimeContextKey)
     response.AddHeader("X-Runtime", fmt.Sprintf("%s", time.Since(started.(time.Time))))
 }

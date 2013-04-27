@@ -4,7 +4,6 @@ import (
     "fmt"
     "github.com/cojac/context"
     "github.com/cojac/mux"
-    "io/ioutil"
     "net/http"
     "strings"
     "time"
@@ -18,31 +17,16 @@ func Pattern(path string, handler HandlerInterface) {
 
     Mux.HandleFunc(path, http.HandlerFunc(
         func(w http.ResponseWriter, r *http.Request) {
+            // Any panic errors will be caught and passed over to
             defer func() {
                 if rec := recover(); rec != nil {
                     LogError.Printf("Panic Recovered: %s", rec)
-                    writeResponse(handler.ErrorHandler(fmt.Sprintf("%s", rec)), w, r)
+                    writePatResponse(handler.ErrorHandler(fmt.Sprintf("%s", rec)), w, r)
                 }
             }()
 
             context.Set(r, tangoRunTimeContextKey, time.Now())
-
-            request := NewHttpRequest()
-            request.Raw = r
-            request.Host = r.URL.Host
-            request.Path = r.URL.Path
-            request.Scheme = r.URL.Scheme
-            request.RawQuery = r.URL.RawQuery
-            request.Fragment = r.URL.Fragment
-            request.PathParams = mux.Vars(r)
-            request.GetParams = r.URL.Query()
-
-            body, err := ioutil.ReadAll(r.Body)
-            if err != nil {
-                panic("Error reading body")
-            }
-            request.Body = string(body)
-
+            request := NewHttpRequest(r)
             RunMiddlewarePreprocess(request)
             handler.Prepare(request)
 
@@ -67,7 +51,7 @@ func Pattern(path string, handler HandlerInterface) {
             handler.Finish(request, response)
             RunMiddlewarePostprocess(request, response)
 
-            writeResponse(response, w, r)
+            writePatResponse(response, w, r)
 
             LogInfo.Printf("%d %s %s (%s) %s",
                 response.StatusCode,
@@ -78,7 +62,7 @@ func Pattern(path string, handler HandlerInterface) {
         }))
 }
 
-func writeResponse(response *HttpResponse, w http.ResponseWriter, r *http.Request) {
+func writePatResponse(response *HttpResponse, w http.ResponseWriter, r *http.Request) {
     for k, v := range response.headers {
         w.Header().Add(k, v)
     }
