@@ -5,14 +5,14 @@ import (
     "strings"
 )
 
-type settingsObj struct {
+type dictObj struct {
     data map[string]interface{}
 }
 
 var Debug = false
-var Settings = settingsObj{data: make(map[string]interface{})}
+var Settings = dictObj{data: make(map[string]interface{})}
 
-func (s *settingsObj) Set(key string, val interface{}) {
+func (s *dictObj) Set(key string, val interface{}) {
     s.data[key] = val
 
     // Special case... only applies to debug!
@@ -21,7 +21,7 @@ func (s *settingsObj) Set(key string, val interface{}) {
     }
 }
 
-func (s *settingsObj) Bool(key string, args ...bool) bool {
+func (s *dictObj) Bool(key string, args ...bool) bool {
     def := false
 
     switch len(args) {
@@ -40,7 +40,7 @@ func (s *settingsObj) Bool(key string, args ...bool) bool {
     return x.(bool)
 }
 
-func (s *settingsObj) Int(key string, args ...int) int {
+func (s *dictObj) Int(key string, args ...int) int {
     var def int = -1
 
     switch len(args) {
@@ -59,7 +59,7 @@ func (s *settingsObj) Int(key string, args ...int) int {
     return int(x.(float64))
 }
 
-func (s *settingsObj) Float(key string, args ...float64) float64 {
+func (s *dictObj) Float(key string, args ...float64) float64 {
     var def float64 = -1
 
     switch len(args) {
@@ -78,16 +78,13 @@ func (s *settingsObj) Float(key string, args ...float64) float64 {
     return x.(float64)
 }
 
-func (s *settingsObj) String(args ...string) string {
-    var key, def string
+func (s *dictObj) String(key string, args ...string) string {
+    var def string
     switch len(args) {
-    case 2:
-        def = args[1]
-        fallthrough
-    case 1:
-        key = args[0]
     case 0:
         break
+    case 1:
+        def = args[0]
     default:
         panic(fmt.Sprintf("String received too many args: [%d]", len(args)))
     }
