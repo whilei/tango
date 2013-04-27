@@ -2,8 +2,8 @@ package tango
 
 import (
     "fmt"
-    "github.com/gorilla/context"
-    "github.com/gorilla/mux"
+    "github.com/cojac/context"
+    "github.com/cojac/mux"
     "io/ioutil"
     "net/http"
     "strings"
