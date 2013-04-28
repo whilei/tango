@@ -5,6 +5,8 @@ import (
     "encoding/json"
     "fmt"
     "os"
+    "reflect"
+    "syscall"
 )
 
 // Special Debug variable... used anywhere and everywhere, so let's make it easy.
@@ -35,12 +37,36 @@ func (s *DictObj) LoadFromFile(filepath string) {
     if err != nil {
         panic(fmt.Sprintf("Unpacking settings json failed: %s", err))
     }
+
+    // Check for the existance of the debug var, otherwise leave it as is.
+    Debug = s.Bool("debug", Debug)
 }
 
 func (s *DictObj) Set(key string, val interface{}) {
     s.data[key] = val
 
     // Special case... only applies to our global Debug!
+    if key == "debug" {
+        Debug = s.Bool(key)
+    }
+}
+
+func (s *DictObj) SetFromEnv(key, envKey string, args ...interface{}) {
+    envVal, ok := syscall.Getenv(envKey)
+
+    if ok {
+        s.data[key] = envVal
+    }
+
+    switch len(args) {
+    case 0:
+        break
+    case 1:
+        s.data[key] = args[0]
+    default:
+        panic(fmt.Sprintf("Bool received too many args: [%d]", len(args)))
+    }
+
     if key == "debug" {
         Debug = s.Bool(key)
     }
@@ -81,7 +107,13 @@ func (s *DictObj) Int(key string, args ...int) int {
     if !ok {
         return def
     }
-    return int(x.(float64))
+
+    // Json will think an int is a float... check and cast please.
+    if reflect.TypeOf(x).Kind() == reflect.Float64 {
+        return int(x.(float64))
+    }
+
+    return x.(int)
 }
 
 func (s *DictObj) Float(key string, args ...float64) float64 {

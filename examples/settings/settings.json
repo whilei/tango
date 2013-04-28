@@ -1,0 +1,8 @@
+{
+    "debug": true,
+    "is_production_ready": false,
+    "project_name": "Tango",
+    "serve_address": ":8000",
+    "some_number": 123,
+    "some_other_number": 456.78
+}
