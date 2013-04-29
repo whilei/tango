@@ -6,7 +6,7 @@ import (
     "testing"
 )
 
-func TestSetDebug(t *testing.T) {
+func TestSettingsSetDebug(t *testing.T) {
     assert.Equal(t, false, Debug)
 
     dictObj := NewDictObj()
@@ -21,7 +21,7 @@ func TestSetDebug(t *testing.T) {
     assert.Equal(t, false, Debug)
 }
 
-func TestSetFromEnv(t *testing.T) {
+func TestSettingsSetFromEnv(t *testing.T) {
     dictObj := NewDictObj()
 
     dictObj.SetFromEnv("a", "bad_key_here", true)
@@ -38,7 +38,7 @@ func TestSetFromEnv(t *testing.T) {
     })
 }
 
-func TestJsonFile(t *testing.T) {
+func TestDictObjJsonFile(t *testing.T) {
     dictObj := NewDictObj()
 
     assert.Panic(t, "Opening settings file failed: open not_there.golang: no such file or directory", func() {
@@ -46,7 +46,7 @@ func TestJsonFile(t *testing.T) {
     })
 }
 
-func TestJsonData(t *testing.T) {
+func TestDictObjJsonData(t *testing.T) {
     tmp := make(map[string]interface{})
 
     err := json.Unmarshal([]byte(`{"intOne":1,"intTwo":23456789}`), &tmp)
@@ -63,7 +63,7 @@ func TestJsonData(t *testing.T) {
     assert.Equal(t, 23456789, dictObj.Int("b"))
 }
 
-func TestBool(t *testing.T) {
+func TestDictObjBool(t *testing.T) {
     dictObj := NewDictObj()
 
     dictObj.Set("a", true)
@@ -82,7 +82,7 @@ func TestBool(t *testing.T) {
     })
 }
 
-func TestInt(t *testing.T) {
+func TestDictObjInt(t *testing.T) {
     dictObj := NewDictObj()
 
     dictObj.Set("a", 1)
@@ -101,7 +101,7 @@ func TestInt(t *testing.T) {
     })
 }
 
-func TestFloat(t *testing.T) {
+func TestDictObjFloat(t *testing.T) {
     dictObj := NewDictObj()
 
     dictObj.Set("a", 1.0)
@@ -120,7 +120,7 @@ func TestFloat(t *testing.T) {
     })
 }
 
-func TestString(t *testing.T) {
+func TestDictObjString(t *testing.T) {
     dictObj := NewDictObj()
 
     dictObj.Set("a", "AAA")
@@ -139,7 +139,7 @@ func TestString(t *testing.T) {
     })
 }
 
-func TestArray(t *testing.T) {
+func TestDictObjArray(t *testing.T) {
     tmp := make(map[string]interface{})
 
     err := json.Unmarshal([]byte(`{"first":["one", "two", "three"], "second":["1", "2"]}`), &tmp)

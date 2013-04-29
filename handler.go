@@ -1,7 +1,11 @@
 package tango
 
 import (
+    "html"
     "net/http"
+    "net/url"
+    "path"
+    "strings"
 )
 
 type HandlerInterface interface {
@@ -33,10 +37,7 @@ func (h BaseHandler) Finish(r *HttpRequest, response *HttpResponse) {
 }
 
 func (h BaseHandler) Head(request *HttpRequest) *HttpResponse {
-    // By default, HEAD requests will mimic a GET request sans content.
-    resp := h.Get(request)
-    resp.Content = ""
-    return resp
+    return HttpResponseNotAllowed()
 }
 
 func (h BaseHandler) Get(request *HttpRequest) *HttpResponse {
@@ -63,47 +64,88 @@ func (h BaseHandler) Options(request *HttpRequest) *HttpResponse {
     return HttpResponseNotAllowed()
 }
 
-// The following are convience methods.
-// TODO: Fix the redirect handler.
-// func HttpResponsePermanentRedirect(url string) *HttpResponse {
-//     // do redirect
-//     //Redirect(w ResponseWriter, r *Request, urlStr string, code int) {
-//     //http://golang.org/src/pkg/net/http/server.go?s=21797:21865#L740
-//     return NewHttpResponse("Moved Permanently", http.StatusMovedPermanently, "text/plain")
-// }
-
-func HttpResponseRedirect(url string) *HttpResponse {
-    // do redirect
-    return NewHttpResponse("Found", http.StatusFound, "text/plain")
+func (h BaseHandler) PermanentRedirect(request *HttpRequest, urlStr string) *HttpResponse {
+    return h.redirect(request.RawRequest, urlStr, http.StatusMovedPermanently)
 }
 
-func HttpResponseNotModified() *HttpResponse {
-    return NewHttpResponse("Not Modified", http.StatusNotModified, "text/plain")
+func (h BaseHandler) TemporaryRedirect(request *HttpRequest, urlStr string) *HttpResponse {
+    return h.redirect(request.RawRequest, urlStr, http.StatusTemporaryRedirect)
 }
 
-func HttpResponseBadRequest() *HttpResponse {
-    return NewHttpResponse("Bad Request", http.StatusBadRequest, "text/plain")
-}
+func (h BaseHandler) redirect(r *http.Request, urlStr string, code int) *HttpResponse {
+    if u, err := url.Parse(urlStr); err == nil {
+        oldpath := r.URL.Path
+        if oldpath == "" {
+            oldpath = "/"
+        }
 
-func HttpResponseForbidden() *HttpResponse {
-    return NewHttpResponse("Forbidden", http.StatusForbidden, "text/plain")
-}
+        if u.Scheme == "" {
+            // no leading http://server
+            if urlStr == "" || urlStr[0] != '/' {
+                // make relative path absolute
+                olddir, _ := path.Split(oldpath)
+                urlStr = olddir + urlStr
+            }
 
-func HttpResponseNotFound() *HttpResponse {
-    return NewHttpResponse("Not Found", http.StatusNotFound, "text/plain")
-}
+            var query string
+            if i := strings.Index(urlStr, "?"); i != -1 {
+                urlStr, query = urlStr[:i], urlStr[i:]
+            }
 
-func HttpResponseNotAllowed() *HttpResponse {
-    response := NewHttpResponse("Method Not Allowed", http.StatusMethodNotAllowed, "text/plain")
-    // TODO: How are we going to determine which methods are implemented on a given handler?
-    //response.AddHeader("Allow", "")
+            // clean up but preserve trailing slash
+            trailing := urlStr[len(urlStr)-1] == '/'
+            urlStr = path.Clean(urlStr)
+            if trailing && urlStr[len(urlStr)-1] != '/' {
+                urlStr += "/"
+            }
+            urlStr += query
+        }
+    }
+
+    response := NewHttpResponse()
+    response.AddHeader("Location", urlStr)
+    response.StatusCode = code
+
+    // RFC2616 recommends that a short note "SHOULD" be included in the
+    // response because older user agents may not understand 301/307.
+    // Shouldn't send the response for POST or HEAD; that leaves GET.
+    if r.Method == "GET" {
+        response.Content = "<a href=\"" + html.EscapeString(urlStr) + "\">" + http.StatusText(code) + "</a>.\n"
+    }
+
     return response
 }
 
+func HttpResponseNotModified() *HttpResponse {
+    return shortHttpReturn(http.StatusNotModified)
+}
+
+func HttpResponseBadRequest() *HttpResponse {
+    return shortHttpReturn(http.StatusBadRequest)
+}
+
+func HttpResponseForbidden() *HttpResponse {
+    return shortHttpReturn(http.StatusForbidden)
+}
+
+func HttpResponseNotFound() *HttpResponse {
+    return shortHttpReturn(http.StatusNotFound)
+}
+
+func HttpResponseNotAllowed() *HttpResponse {
+    // TODO: How are we going to determine which methods are implemented on a given handler?
+    //response.AddHeader("Allow", "")
+    return shortHttpReturn(http.StatusMethodNotAllowed)
+}
+
 func HttpResponseGone() *HttpResponse {
-    return NewHttpResponse("Gone", http.StatusGone, "text/plain")
+    return shortHttpReturn(http.StatusGone)
 }
 
 func HttpResponseServerError() *HttpResponse {
-    return NewHttpResponse("Internal Server Error", http.StatusInternalServerError, "text/plain")
+    return shortHttpReturn(http.StatusInternalServerError)
+}
+
+func shortHttpReturn(code int) *HttpResponse {
+    return NewHttpResponse(http.StatusText(code), code, "text/plain")
 }

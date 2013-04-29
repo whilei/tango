@@ -19,11 +19,13 @@ func NewHttpRequest(orig *http.Request) *HttpRequest {
     r := new(HttpRequest)
     r.RawRequest = orig
 
-    body, err := ioutil.ReadAll(orig.Body)
-    if err != nil {
-        panic("Error reading body")
+    if orig.Body != nil {
+        body, err := ioutil.ReadAll(orig.Body)
+        if err != nil {
+            panic("Error reading body")
+        }
+        r.Body = string(body)
     }
-    r.Body = string(body)
 
     return r
 }

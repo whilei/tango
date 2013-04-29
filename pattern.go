@@ -17,7 +17,7 @@ func Pattern(path string, handler HandlerInterface) {
 
     Mux.HandleFunc(path, http.HandlerFunc(
         func(w http.ResponseWriter, r *http.Request) {
-            // Any panic errors will be caught and passed over to
+            // Any panic errors will be caught and passed over to our ErrorHandler.
             defer func() {
                 if rec := recover(); rec != nil {
                     LogError.Printf("Panic Recovered: %s", rec)
@@ -34,6 +34,13 @@ func Pattern(path string, handler HandlerInterface) {
             switch strings.ToUpper(r.Method) {
             case "HEAD":
                 response = handler.Head(request)
+                if response.StatusCode == http.StatusMethodNotAllowed {
+                    resp2 := handler.Get(request)
+                    if resp2.StatusCode == http.StatusOK {
+                        response = resp2
+                        response.Content = ""
+                    }
+                }
             case "GET":
                 response = handler.Get(request)
             case "POST":
