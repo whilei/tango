@@ -18,7 +18,11 @@ type DictObj struct {
 
 // Convention will be json style settings. Try to keep it a single level deep.
 // Key values should be lower_case_with_underscores. Ex: debug, or secret_key.
-var Settings = DictObj{data: make(map[string]interface{})}
+var Settings = NewDictObj()
+
+func NewDictObj() DictObj {
+    return DictObj{data: make(map[string]interface{})}
+}
 
 func (s *DictObj) LoadFromFile(filepath string) {
     f, err := os.Open(filepath)
@@ -64,7 +68,7 @@ func (s *DictObj) SetFromEnv(key, envKey string, args ...interface{}) {
     case 1:
         s.data[key] = args[0]
     default:
-        panic(fmt.Sprintf("Bool received too many args: [%d]", len(args)))
+        panic(fmt.Sprintf("SetFromEnv received too many args: [%d]", len(args)))
     }
 
     if key == "debug" {
