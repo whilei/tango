@@ -3,10 +3,18 @@ package tango
 import (
     "github.com/bmizerany/assert"
     "github.com/cojac/mux"
+    "io/ioutil"
+    "log"
     "net/http"
     "net/http/httptest"
     "testing"
 )
+
+func init() {
+    // Disable logging when running the tests.
+    LogInfo = log.New(ioutil.Discard, "", log.LstdFlags)
+    LogError = log.New(ioutil.Discard, "", log.LstdFlags)
+}
 
 //---
 type MiddleHandler struct{ BaseHandler }
