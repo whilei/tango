@@ -5,12 +5,18 @@ import (
     "github.com/cojac/tango/middleware"
 )
 
-type IndexHandler struct {
-    tango.BaseHandler
+// Using the NewHttpResponse method to generate an HttpResponse.
+type NewHandler struct{ tango.BaseHandler }
+
+func (h NewHandler) Get(request *tango.HttpRequest) *tango.HttpResponse {
+    return tango.NewHttpResponse("Hello, world.")
 }
 
-func (h IndexHandler) Get(request *tango.HttpRequest) *tango.HttpResponse {
-    return tango.NewHttpResponse("Hello, world")
+// Using the literal HttpResponse invokation.
+type LiteralHandler struct{ tango.BaseHandler }
+
+func (h LiteralHandler) Get(request *tango.HttpRequest) *tango.HttpResponse {
+    return &tango.HttpResponse{Content: "Hello, world... again!", StatusCode: 200}
 }
 
 func init() {
@@ -19,9 +25,8 @@ func init() {
 }
 
 func main() {
-    tango.Pattern("/", IndexHandler{})
-    tango.Pattern("/hello/world/", IndexHandler{})
-    tango.Pattern("/reg/{ex}/{id:[0-9]+}/", IndexHandler{})
+    tango.Pattern("/", NewHandler{})
+    tango.Pattern("/lit/{id:[0-9]+}/", LiteralHandler{})
 
     tango.Middleware(middleware.RuntimeProfile{})
 
