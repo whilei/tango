@@ -2,11 +2,18 @@ package tango
 
 import (
     "github.com/bmizerany/assert"
-    "github.com/cojac/mux"
+    "io/ioutil"
+    "log"
     "net/http"
     "net/http/httptest"
     "testing"
 )
+
+func init() {
+    // Disable logging when running the tests.
+    LogInfo = log.New(ioutil.Discard, "", log.LstdFlags)
+    LogError = log.New(ioutil.Discard, "", log.LstdFlags)
+}
 
 //---
 type MiddleHandler struct{ BaseHandler }
@@ -19,11 +26,11 @@ func (h MiddleHandler) Get(request *HttpRequest) *HttpResponse {
 type Firstware struct{ BaseMiddleware }
 
 func (m Firstware) ProcessRequest(request *HttpRequest) {
-    request.Header().Set("X-pre", "superman")
+    request.Header.Set("X-pre", "superman")
 }
 
 func (m Firstware) ProcessResponse(request *HttpRequest, response *HttpResponse) {
-    response.AddHeader("X-post", request.Header().Get("X-pre"))
+    response.Header.Set("X-post", request.Header.Get("X-pre"))
     response.Content = "bar"
 }
 
@@ -31,7 +38,7 @@ func (m Firstware) ProcessResponse(request *HttpRequest, response *HttpResponse)
 type Secondware struct{ BaseMiddleware }
 
 func (m Secondware) ProcessRequest(request *HttpRequest) {
-    request.Header().Set("X-pre", "batman")
+    request.Header.Set("X-pre", "batman")
 }
 
 //---
@@ -43,6 +50,8 @@ func (m Thirdware) ProcessResponse(request *HttpRequest, response *HttpResponse)
 
 //---
 func TestBasicMiddleware(t *testing.T) {
+    defer func() { Mux = &PatternServeMux{} }()
+    defer func() { Middlewares = []MiddlewareInterface{} }()
     Pattern("/", MiddleHandler{})
     Middleware(Firstware{})
 
@@ -53,11 +62,11 @@ func TestBasicMiddleware(t *testing.T) {
     assert.Equal(t, "bar", rec.Body.String())
     assert.Equal(t, "superman", rec.Header().Get("X-post"))
 
-    Mux = mux.NewRouter()
-    Middlewares = []MiddlewareInterface{}
 }
 
 func TestOrderOfMiddleware(t *testing.T) {
+    defer func() { Mux = &PatternServeMux{} }()
+    defer func() { Middlewares = []MiddlewareInterface{} }()
     Pattern("/", MiddleHandler{})
     Middleware(Firstware{})
     Middleware(Secondware{})
@@ -68,12 +77,11 @@ func TestOrderOfMiddleware(t *testing.T) {
     assert.Equal(t, http.StatusOK, rec.Code)
     assert.Equal(t, "bar", rec.Body.String())
     assert.Equal(t, "batman", rec.Header().Get("X-post"))
-
-    Mux = mux.NewRouter()
-    Middlewares = []MiddlewareInterface{}
 }
 
 func TestOrderOfMiddlewareReversed(t *testing.T) {
+    defer func() { Mux = &PatternServeMux{} }()
+    defer func() { Middlewares = []MiddlewareInterface{} }()
     Pattern("/", MiddleHandler{})
     Middleware(Secondware{})
     Middleware(Firstware{})
@@ -84,12 +92,11 @@ func TestOrderOfMiddlewareReversed(t *testing.T) {
     assert.Equal(t, http.StatusOK, rec.Code)
     assert.Equal(t, "bar", rec.Body.String())
     assert.Equal(t, "superman", rec.Header().Get("X-post"))
-
-    Mux = mux.NewRouter()
-    Middlewares = []MiddlewareInterface{}
 }
 
 func TestMultiMiddleware(t *testing.T) {
+    defer func() { Mux = &PatternServeMux{} }()
+    defer func() { Middlewares = []MiddlewareInterface{} }()
     Pattern("/", MiddleHandler{})
     Middleware(Thirdware{})
     Middleware(Firstware{})
@@ -101,7 +108,4 @@ func TestMultiMiddleware(t *testing.T) {
     assert.Equal(t, http.StatusOK, rec.Code)
     assert.Equal(t, "foobar", rec.Body.String())
     assert.Equal(t, "batman", rec.Header().Get("X-post"))
-
-    Mux = mux.NewRouter()
-    Middlewares = []MiddlewareInterface{}
 }

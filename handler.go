@@ -25,7 +25,7 @@ type HandlerInterface interface {
 type BaseHandler struct{}
 
 func (h BaseHandler) ErrorHandler(errorStr string) *HttpResponse {
-    return HttpResponseServerError()
+    return h.HttpResponseServerError()
 }
 
 func (h BaseHandler) Prepare(r *HttpRequest) {
@@ -37,42 +37,42 @@ func (h BaseHandler) Finish(r *HttpRequest, response *HttpResponse) {
 }
 
 func (h BaseHandler) Head(request *HttpRequest) *HttpResponse {
-    return HttpResponseNotAllowed()
+    return h.HttpResponseNotAllowed()
 }
 
 func (h BaseHandler) Get(request *HttpRequest) *HttpResponse {
-    return HttpResponseNotAllowed()
+    return h.HttpResponseNotAllowed()
 }
 
 func (h BaseHandler) Post(request *HttpRequest) *HttpResponse {
-    return HttpResponseNotAllowed()
+    return h.HttpResponseNotAllowed()
 }
 
 func (h BaseHandler) Put(request *HttpRequest) *HttpResponse {
-    return HttpResponseNotAllowed()
+    return h.HttpResponseNotAllowed()
 }
 
 func (h BaseHandler) Patch(request *HttpRequest) *HttpResponse {
-    return HttpResponseNotAllowed()
+    return h.HttpResponseNotAllowed()
 }
 
 func (h BaseHandler) Delete(request *HttpRequest) *HttpResponse {
-    return HttpResponseNotAllowed()
+    return h.HttpResponseNotAllowed()
 }
 
 func (h BaseHandler) Options(request *HttpRequest) *HttpResponse {
-    return HttpResponseNotAllowed()
+    return h.HttpResponseNotAllowed()
 }
 
 func (h BaseHandler) PermanentRedirect(request *HttpRequest, urlStr string) *HttpResponse {
-    return h.redirect(request.RawRequest, urlStr, http.StatusMovedPermanently)
+    return h.redirect(request, urlStr, http.StatusMovedPermanently)
 }
 
 func (h BaseHandler) TemporaryRedirect(request *HttpRequest, urlStr string) *HttpResponse {
-    return h.redirect(request.RawRequest, urlStr, http.StatusTemporaryRedirect)
+    return h.redirect(request, urlStr, http.StatusTemporaryRedirect)
 }
 
-func (h BaseHandler) redirect(r *http.Request, urlStr string, code int) *HttpResponse {
+func (h BaseHandler) redirect(r *HttpRequest, urlStr string, code int) *HttpResponse {
     if u, err := url.Parse(urlStr); err == nil {
         oldpath := r.URL.Path
         if oldpath == "" {
@@ -103,7 +103,7 @@ func (h BaseHandler) redirect(r *http.Request, urlStr string, code int) *HttpRes
     }
 
     response := NewHttpResponse()
-    response.AddHeader("Location", urlStr)
+    response.Header.Set("Location", urlStr)
     response.StatusCode = code
 
     // RFC2616 recommends that a short note "SHOULD" be included in the
@@ -116,33 +116,31 @@ func (h BaseHandler) redirect(r *http.Request, urlStr string, code int) *HttpRes
     return response
 }
 
-func HttpResponseNotModified() *HttpResponse {
+func (h BaseHandler) HttpResponseNotModified() *HttpResponse {
     return shortHttpReturn(http.StatusNotModified)
 }
 
-func HttpResponseBadRequest() *HttpResponse {
+func (h BaseHandler) HttpResponseBadRequest() *HttpResponse {
     return shortHttpReturn(http.StatusBadRequest)
 }
 
-func HttpResponseForbidden() *HttpResponse {
+func (h BaseHandler) HttpResponseForbidden() *HttpResponse {
     return shortHttpReturn(http.StatusForbidden)
 }
 
-func HttpResponseNotFound() *HttpResponse {
+func (h BaseHandler) HttpResponseNotFound() *HttpResponse {
     return shortHttpReturn(http.StatusNotFound)
 }
 
-func HttpResponseNotAllowed() *HttpResponse {
-    // TODO: How are we going to determine which methods are implemented on a given handler?
-    //response.AddHeader("Allow", "")
+func (h BaseHandler) HttpResponseNotAllowed() *HttpResponse {
     return shortHttpReturn(http.StatusMethodNotAllowed)
 }
 
-func HttpResponseGone() *HttpResponse {
+func (h BaseHandler) HttpResponseGone() *HttpResponse {
     return shortHttpReturn(http.StatusGone)
 }
 
-func HttpResponseServerError() *HttpResponse {
+func (h BaseHandler) HttpResponseServerError() *HttpResponse {
     return shortHttpReturn(http.StatusInternalServerError)
 }
 

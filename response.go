@@ -2,37 +2,15 @@ package tango
 
 import (
     "fmt"
+    "net/http"
 )
 
 type HttpResponse struct {
     Content     string
     StatusCode  int
     ContentType string
-    headers     map[string]string
-}
-
-func (r *HttpResponse) AddHeader(k, v string) {
-    dst := make(map[string]string)
-    for k, v := range r.headers {
-        dst[k] = v
-    }
-    dst[k] = v
-
-    r.headers = dst
-}
-
-func (r *HttpResponse) DeleteHeader(k string) {
-    delete(r.headers, k)
-}
-
-func (r *HttpResponse) GetHeader(k string) (string, bool) {
-    val, ok := r.headers[k]
-    return val, ok
-}
-
-func (r *HttpResponse) HasHeader(k string) bool {
-    _, exists := r.headers[k]
-    return exists
+    Context     map[string]interface{}
+    Header      http.Header
 }
 
 func NewHttpResponse(args ...interface{}) *HttpResponse {
@@ -60,6 +38,9 @@ func NewHttpResponse(args ...interface{}) *HttpResponse {
     r.Content = content
     r.StatusCode = status
     r.ContentType = contentType
+
+    r.Header = make(http.Header)
+    r.Context = make(map[string]interface{})
 
     return r
 }

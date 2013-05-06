@@ -2,7 +2,6 @@ package tango
 
 import (
     "github.com/bmizerany/assert"
-    "github.com/cojac/mux"
     "io/ioutil"
     "log"
     "net/http"
@@ -18,6 +17,7 @@ func init() {
 
 //---
 func TestHandlerMethods(t *testing.T) {
+    defer func() { Mux = &PatternServeMux{} }()
     Pattern("/", BaseHandler{})
 
     methods := []string{"HEAD", "GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"}
@@ -27,8 +27,6 @@ func TestHandlerMethods(t *testing.T) {
         Mux.ServeHTTP(rec, r)
         assert.Equal(t, http.StatusMethodNotAllowed, rec.Code)
     }
-
-    Mux = mux.NewRouter()
 }
 
 //---
@@ -39,6 +37,7 @@ func (h GetHandler) Get(request *HttpRequest) *HttpResponse {
 }
 
 func TestHandlerHead(t *testing.T) {
+    defer func() { Mux = &PatternServeMux{} }()
     Pattern("/", GetHandler{})
 
     r, _ := http.NewRequest("GET", "/", nil)
@@ -57,8 +56,6 @@ func TestHandlerHead(t *testing.T) {
 
     assert.NotEqual(t, getResult, rec.Body)
     assert.Equal(t, 0, len(rec.Body.String()))
-
-    Mux = mux.NewRouter()
 }
 
 //---
@@ -68,15 +65,16 @@ func (h PrepFinHandler) Get(request *HttpRequest) *HttpResponse {
     return NewHttpResponse("PrepFin")
 }
 func (h PrepFinHandler) Prepare(r *HttpRequest) {
-    r.Header().Add("X-pre", "superman")
+    r.Header.Set("X-pre", "superman")
 }
 
 func (h PrepFinHandler) Finish(r *HttpRequest, response *HttpResponse) {
-    response.AddHeader("X-pre", r.Header().Get("X-pre"))
-    response.AddHeader("X-fin", "batman")
+    response.Header.Set("X-pre", r.Header.Get("X-pre"))
+    response.Header.Set("X-fin", "batman")
 }
 
 func TestHandlerPrepareFinish(t *testing.T) {
+    defer func() { Mux = &PatternServeMux{} }()
     Pattern("/", PrepFinHandler{})
 
     r, _ := http.NewRequest("GET", "/", nil)
@@ -86,33 +84,32 @@ func TestHandlerPrepareFinish(t *testing.T) {
     assert.Equal(t, http.StatusOK, rec.Code)
     assert.Equal(t, "superman", rec.Header().Get("X-pre"))
     assert.Equal(t, "batman", rec.Header().Get("X-fin"))
-
-    Mux = mux.NewRouter()
 }
 
 //---
 type GenericHandler struct{ BaseHandler }
 
 func (h GenericHandler) Get(request *HttpRequest) *HttpResponse {
-    return HttpResponseGone()
+    return h.HttpResponseGone()
 }
 func (h GenericHandler) Post(request *HttpRequest) *HttpResponse {
-    return HttpResponseNotFound()
+    return h.HttpResponseNotFound()
 }
 func (h GenericHandler) Put(request *HttpRequest) *HttpResponse {
-    return HttpResponseForbidden()
+    return h.HttpResponseForbidden()
 }
 func (h GenericHandler) Delete(request *HttpRequest) *HttpResponse {
-    return HttpResponseBadRequest()
+    return h.HttpResponseBadRequest()
 }
 func (h GenericHandler) Patch(request *HttpRequest) *HttpResponse {
-    return HttpResponseNotModified()
+    return h.HttpResponseNotModified()
 }
 func (h GenericHandler) Option(request *HttpRequest) *HttpResponse {
-    return HttpResponseServerError()
+    return h.HttpResponseServerError()
 }
 
 func TestHandlerGenericResponses(t *testing.T) {
+    defer func() { Mux = &PatternServeMux{} }()
     Pattern("/", GenericHandler{})
 
     r, _ := http.NewRequest("GET", "/", nil)
@@ -144,8 +141,6 @@ func TestHandlerGenericResponses(t *testing.T) {
     rec = httptest.NewRecorder()
     Mux.ServeHTTP(rec, r)
     assert.Equal(t, http.StatusInternalServerError, rec.Code)
-
-    Mux = mux.NewRouter()
 }
 
 //---
@@ -167,11 +162,12 @@ func (h RedirectHandler) Options(request *HttpRequest) *HttpResponse {
     return h.PermanentRedirect(request, "next/?foo=bar")
 }
 func (h RedirectHandler) Patch(request *HttpRequest) *HttpResponse {
-    request.RawRequest.URL.Path = ""
+    request.URL.Path = ""
     return h.TemporaryRedirect(request, "/next/")
 }
 
 func TestHandlerRedirect(t *testing.T) {
+    defer func() { Mux = &PatternServeMux{} }()
     Pattern("/start/", RedirectHandler{})
 
     r, _ := http.NewRequest("GET", "/start/", nil)
@@ -209,8 +205,6 @@ func TestHandlerRedirect(t *testing.T) {
     Mux.ServeHTTP(rec, r)
     assert.Equal(t, http.StatusTemporaryRedirect, rec.Code)
     assert.Equal(t, "/next/", rec.Header().Get("Location"))
-
-    Mux = mux.NewRouter()
 }
 
 //---
@@ -230,6 +224,7 @@ func (h CustomErrHandler) ErrorHandler(errorStr string) *HttpResponse {
 }
 
 func TestHandlerErrors(t *testing.T) {
+    defer func() { Mux = &PatternServeMux{} }()
     Pattern("/err/", ErrHandler{})
     Pattern("/custom/", CustomErrHandler{})
 
@@ -245,6 +240,36 @@ func TestHandlerErrors(t *testing.T) {
     assert.Equal(t, 400, rec.Code)
     assert.Equal(t, `{"hello": "world"}`, rec.Body.String())
     assert.Equal(t, "application/json", rec.Header().Get("Content-Type"))
+}
 
-    Mux = mux.NewRouter()
+//---
+type AllowedHandler struct{ BaseHandler }
+
+func (h AllowedHandler) Get(request *HttpRequest) *HttpResponse {
+    return NewHttpResponse("This is allowed")
+}
+
+func (h AllowedHandler) Post(request *HttpRequest) *HttpResponse {
+    return NewHttpResponse("This is also allowed")
+}
+
+func TestHandlerAllowedMethods(t *testing.T) {
+    defer func() { Mux = &PatternServeMux{} }()
+    Pattern("/allowed/", AllowedHandler{})
+
+    r, _ := http.NewRequest("GET", "/allowed/", nil)
+    rec := httptest.NewRecorder()
+    Mux.ServeHTTP(rec, r)
+    assert.Equal(t, http.StatusOK, rec.Code)
+
+    r, _ = http.NewRequest("POST", "/allowed/", nil)
+    rec = httptest.NewRecorder()
+    Mux.ServeHTTP(rec, r)
+    assert.Equal(t, http.StatusOK, rec.Code)
+
+    r, _ = http.NewRequest("PUT", "/allowed/", nil)
+    rec = httptest.NewRecorder()
+    Mux.ServeHTTP(rec, r)
+    assert.Equal(t, http.StatusMethodNotAllowed, rec.Code)
+    //assert.Equal(t, "GET,POST", rec.Header().Get("Allow"))
 }
