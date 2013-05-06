@@ -11,10 +11,11 @@ type HttpRequest struct {
     http.Request
     BodyString string
     PathValues url.Values
+    Args       map[string]interface{} //Subject to a better name!
 }
 
 func NewHttpRequest(orig *http.Request, params url.Values) *HttpRequest {
-    r := HttpRequest{*orig, "", params}
+    r := HttpRequest{*orig, "", params, make(map[string]interface{})}
 
     if r.Body != nil {
         strBody, err := ioutil.ReadAll(r.Body)

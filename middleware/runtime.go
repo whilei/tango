@@ -2,7 +2,6 @@ package middleware
 
 import (
     "fmt"
-    "github.com/cojac/context"
     "github.com/cojac/tango"
     "time"
 )
@@ -14,10 +13,10 @@ type RuntimeProfile struct {
 }
 
 func (m RuntimeProfile) ProcessRequest(request *tango.HttpRequest) {
-    context.Set(request.RawRequest, runTimeContextKey, time.Now())
+    request.Args[runTimeContextKey] = time.Now()
 }
 
 func (m RuntimeProfile) ProcessResponse(request *tango.HttpRequest, response *tango.HttpResponse) {
-    started := context.Get(request.RawRequest, runTimeContextKey)
-    response.AddHeader("X-Runtime", fmt.Sprintf("%s", time.Since(started.(time.Time))))
+    started := request.Args[runTimeContextKey]
+    response.Header.Set("X-Runtime", fmt.Sprintf("%s", time.Since(started.(time.Time))))
 }
