@@ -4,12 +4,10 @@ import (
     "github.com/cojac/tango"
 )
 
-type IndexHandler struct {
-    tango.BaseHandler
-}
+type IndexHandler struct{ tango.BaseHandler }
 
 func (h IndexHandler) Get(request *tango.HttpRequest) *tango.HttpResponse {
-    return tango.NewHttpResponse("Hello, world")
+    return tango.NewHttpResponse("Hello, world.")
 }
 
 func init() {
