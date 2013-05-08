@@ -22,6 +22,7 @@ func Middleware(m MiddlewareInterface) {
 }
 
 func RunMiddlewarePreprocess(req *HttpRequest) {
+    // Top to bottom.
     for i := 0; i < len(Middlewares); i++ {
         m := Middlewares[i]
         m.ProcessRequest(req)
@@ -29,6 +30,7 @@ func RunMiddlewarePreprocess(req *HttpRequest) {
 }
 
 func RunMiddlewarePostprocess(req *HttpRequest, resp *HttpResponse) {
+    // Bottom to top.
     for i := len(Middlewares) - 1; i >= 0; i-- {
         m := Middlewares[i]
         m.ProcessResponse(req, resp)

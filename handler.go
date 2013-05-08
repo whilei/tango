@@ -73,6 +73,7 @@ func (h BaseHandler) TemporaryRedirect(request *HttpRequest, urlStr string) *Htt
 }
 
 func (h BaseHandler) redirect(r *HttpRequest, urlStr string, code int) *HttpResponse {
+    // Borrowed from http://golang.org/pkg/net/http/#Redirect
     if u, err := url.Parse(urlStr); err == nil {
         oldpath := r.URL.Path
         if oldpath == "" {
@@ -80,9 +81,7 @@ func (h BaseHandler) redirect(r *HttpRequest, urlStr string, code int) *HttpResp
         }
 
         if u.Scheme == "" {
-            // no leading http://server
             if urlStr == "" || urlStr[0] != '/' {
-                // make relative path absolute
                 olddir, _ := path.Split(oldpath)
                 urlStr = olddir + urlStr
             }
@@ -92,7 +91,6 @@ func (h BaseHandler) redirect(r *HttpRequest, urlStr string, code int) *HttpResp
                 urlStr, query = urlStr[:i], urlStr[i:]
             }
 
-            // clean up but preserve trailing slash
             trailing := urlStr[len(urlStr)-1] == '/'
             urlStr = path.Clean(urlStr)
             if trailing && urlStr[len(urlStr)-1] != '/' {
@@ -109,7 +107,7 @@ func (h BaseHandler) redirect(r *HttpRequest, urlStr string, code int) *HttpResp
     // RFC2616 recommends that a short note "SHOULD" be included in the
     // response because older user agents may not understand 301/307.
     // Shouldn't send the response for POST or HEAD; that leaves GET.
-    if r.Method == "GET" {
+    if strings.EqualFold(r.Method, "GET") {
         response.Content = "<a href=\"" + html.EscapeString(urlStr) + "\">" + http.StatusText(code) + "</a>.\n"
     }
 

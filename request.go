@@ -30,7 +30,7 @@ func NewHttpRequest(orig *http.Request, params url.Values) *HttpRequest {
 
 //Info methods.
 func (r HttpRequest) IsSecure() bool {
-    if r.URL.Scheme == "https" {
+    if strings.EqualFold(r.URL.Scheme, "https") {
         return true
     }
 
@@ -38,7 +38,7 @@ func (r HttpRequest) IsSecure() bool {
         return true
     }
 
-    if r.Header.Get("X-Forwarded-Proto") == "https" {
+    if strings.EqualFold(r.Header.Get("X-Forwarded-Proto"), "https") {
         return true
     }
 
@@ -52,7 +52,7 @@ func (r HttpRequest) IsAjax() bool {
     }
 
     for _, v := range xhr {
-        if strings.ToLower(v) == "xmlhttprequest" {
+        if strings.EqualFold(v, "xmlhttprequest") {
             return true
         }
     }

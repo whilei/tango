@@ -14,7 +14,7 @@ type IndexHandler struct {
 }
 
 func (h IndexHandler) Get(request *HttpRequest) *HttpResponse {
-    passedId, _ := request.PathValue("id")
+    passedId, _ := request.PathValue(":id")
     return NewHttpResponse(fmt.Sprintf("Hello, world: %s", passedId))
 }
 
@@ -32,11 +32,11 @@ func (m Benchware) ProcessResponse(request *HttpRequest, response *HttpResponse)
 
 //---
 func BenchmarkTango(b *testing.B) {
-    Pattern("/reg/{ex}/{id:[0-9]+}/", IndexHandler{})
+    Pattern("/hello/:id", IndexHandler{})
     Middleware(Benchware{})
 
     for i := 0; i < b.N; i++ {
-        url := fmt.Sprintf("/reg/anything/%d/", i)
+        url := fmt.Sprintf("/hello/%d", i)
         rec := httptest.NewRecorder()
         request, _ := http.NewRequest("GET", url, nil)
         Mux.ServeHTTP(rec, request)
