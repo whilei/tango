@@ -14,7 +14,7 @@ func init() {
     tango.Settings.Set("debug", true)
     tango.Settings.Set("serve_address", ":8000")
 
-    tango.Pattern("/", IndexHandler{})
+    tango.Pattern("/", &IndexHandler{})
 }
 
 func main() {

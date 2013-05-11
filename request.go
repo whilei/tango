@@ -10,8 +10,8 @@ import (
 type HttpRequest struct {
     http.Request
     BodyString string
-    PathValues url.Values
-    Args       map[string]interface{} //Subject to a better name!
+    PathArgs   url.Values
+    Registry   map[string]interface{}
 }
 
 func NewHttpRequest(orig *http.Request, params url.Values) *HttpRequest {
@@ -62,7 +62,7 @@ func (r HttpRequest) IsAjax() bool {
 
 // Retrive specific values.
 func (r HttpRequest) PathValue(key string) (string, bool) {
-    val, ok := r.PathValues[key]
+    val, ok := r.PathArgs[key]
     if ok {
         return val[0], ok
     }

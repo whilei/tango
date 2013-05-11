@@ -25,7 +25,7 @@ func (h MiddleHandler) Get(request *HttpRequest) *HttpResponse {
 //---
 type Firstware struct{ BaseMiddleware }
 
-func (m Firstware) ProcessRequest(request *HttpRequest) {
+func (m Firstware) ProcessRequest(request *HttpRequest, response *HttpResponse) {
     request.Header.Set("X-pre", "superman")
 }
 
@@ -37,7 +37,7 @@ func (m Firstware) ProcessResponse(request *HttpRequest, response *HttpResponse)
 //---
 type Secondware struct{ BaseMiddleware }
 
-func (m Secondware) ProcessRequest(request *HttpRequest) {
+func (m Secondware) ProcessRequest(request *HttpRequest, response *HttpResponse) {
     request.Header.Set("X-pre", "batman")
 }
 

@@ -11,6 +11,7 @@ type HttpResponse struct {
     ContentType string
     Context     map[string]interface{}
     Header      http.Header
+    isFinished  bool
 }
 
 func NewHttpResponse(args ...interface{}) *HttpResponse {
@@ -18,7 +19,7 @@ func NewHttpResponse(args ...interface{}) *HttpResponse {
 
     content := ""
     status := 200
-    contentType := "text/html; charset=utf-8"
+    contentType := "text/html; charset=" + Settings.String("charset", "utf-8")
 
     switch len(args) {
     case 3:
@@ -38,9 +39,14 @@ func NewHttpResponse(args ...interface{}) *HttpResponse {
     r.Content = content
     r.StatusCode = status
     r.ContentType = contentType
+    r.isFinished = false
 
     r.Header = make(http.Header)
     r.Context = make(map[string]interface{})
 
     return r
+}
+
+func (h HttpResponse) Finish() {
+    h.isFinished = true
 }

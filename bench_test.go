@@ -21,12 +21,11 @@ func (h IndexHandler) Get(request *HttpRequest) *HttpResponse {
 //---
 type Benchware struct{ BaseMiddleware }
 
-func (m Benchware) ProcessRequest(request *HttpRequest) {
+func (m Benchware) ProcessRequest(request *HttpRequest, response *HttpResponse) {
     request.Header.Set("X-pre", "superman")
 }
 
 func (m Benchware) ProcessResponse(request *HttpRequest, response *HttpResponse) {
-
     response.Header.Set("X-post", request.Header.Get("X-pre"))
 }
 

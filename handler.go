@@ -9,16 +9,16 @@ import (
 )
 
 type HandlerInterface interface {
-    Head(r *HttpRequest) *HttpResponse
-    Get(r *HttpRequest) *HttpResponse
-    Post(r *HttpRequest) *HttpResponse
-    Put(r *HttpRequest) *HttpResponse
-    Patch(r *HttpRequest) *HttpResponse
-    Delete(r *HttpRequest) *HttpResponse
-    Options(r *HttpRequest) *HttpResponse
+    Head(request *HttpRequest) *HttpResponse
+    Get(request *HttpRequest) *HttpResponse
+    Post(request *HttpRequest) *HttpResponse
+    Put(request *HttpRequest) *HttpResponse
+    Patch(request *HttpRequest) *HttpResponse
+    Delete(request *HttpRequest) *HttpResponse
+    Options(request *HttpRequest) *HttpResponse
 
-    Prepare(r *HttpRequest)
-    Finish(r *HttpRequest, response *HttpResponse)
+    Prepare(request *HttpRequest, response *HttpResponse)
+    Finish(request *HttpRequest, response *HttpResponse)
     ErrorHandler(errorStr string) *HttpResponse
 }
 
@@ -28,11 +28,11 @@ func (h BaseHandler) ErrorHandler(errorStr string) *HttpResponse {
     return h.HttpResponseServerError()
 }
 
-func (h BaseHandler) Prepare(r *HttpRequest) {
+func (h BaseHandler) Prepare(request *HttpRequest, response *HttpResponse) {
     // pass
 }
 
-func (h BaseHandler) Finish(r *HttpRequest, response *HttpResponse) {
+func (h BaseHandler) Finish(request *HttpRequest, response *HttpResponse) {
     // pass
 }
 

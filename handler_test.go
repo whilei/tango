@@ -59,34 +59,6 @@ func TestHandlerHead(t *testing.T) {
 }
 
 //---
-type PrepFinHandler struct{ BaseHandler }
-
-func (h PrepFinHandler) Get(request *HttpRequest) *HttpResponse {
-    return NewHttpResponse("PrepFin")
-}
-func (h PrepFinHandler) Prepare(r *HttpRequest) {
-    r.Header.Set("X-pre", "superman")
-}
-
-func (h PrepFinHandler) Finish(r *HttpRequest, response *HttpResponse) {
-    response.Header.Set("X-pre", r.Header.Get("X-pre"))
-    response.Header.Set("X-fin", "batman")
-}
-
-func TestHandlerPrepareFinish(t *testing.T) {
-    defer func() { Mux = &PatternServeMux{} }()
-    Pattern("/", PrepFinHandler{})
-
-    r, _ := http.NewRequest("GET", "/", nil)
-    rec := httptest.NewRecorder()
-    Mux.ServeHTTP(rec, r)
-
-    assert.Equal(t, http.StatusOK, rec.Code)
-    assert.Equal(t, "superman", rec.Header().Get("X-pre"))
-    assert.Equal(t, "batman", rec.Header().Get("X-fin"))
-}
-
-//---
 type GenericHandler struct{ BaseHandler }
 
 func (h GenericHandler) Get(request *HttpRequest) *HttpResponse {

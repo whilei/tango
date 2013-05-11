@@ -107,38 +107,49 @@ func (ph *patHandler) ServeHandlerHttp(w http.ResponseWriter, r *http.Request, p
     start_request := time.Now()
 
     request := NewHttpRequest(r, params)
-    RunMiddlewarePreprocess(request)
-    ph.Prepare(request)
+    response := NewHttpResponse()
+    RunMiddlewarePreprocess(request, response)
 
-    var response *HttpResponse
-
-    switch strings.ToUpper(r.Method) {
-    case "HEAD":
-        response = ph.Head(request)
-        if response.StatusCode == http.StatusMethodNotAllowed {
-            resp2 := ph.Get(request)
-            if resp2.StatusCode == http.StatusOK {
-                response = resp2
-                response.Content = ""
-            }
-        }
-    case "GET":
-        response = ph.Get(request)
-    case "POST":
-        response = ph.Post(request)
-    case "PUT":
-        response = ph.Put(request)
-    case "PATCH":
-        response = ph.Patch(request)
-    case "DELETE":
-        response = ph.Delete(request)
-    case "OPTIONS":
-        response = ph.Options(request)
+    // Only if the response has not finished should we let the handler touch it.
+    if !response.isFinished {
+        ph.Prepare(request, response)
+        defer ph.Finish(request, response)
     }
 
-    ph.Finish(request, response)
+    // And again, the prepare method has the ability to halt the response, so check again.
+    if !response.isFinished {
+        switch strings.ToUpper(r.Method) {
+        case "HEAD":
+            // If HEAD is not implemented, just trip the content from a regular GET request.
+            response = ph.Head(request)
+            if response.StatusCode == http.StatusMethodNotAllowed {
+                getResp := ph.Get(request)
+                if getResp.StatusCode == http.StatusOK {
+                    response = getResp
+                    response.Content = ""
+                }
+            }
+        case "GET":
+            response = ph.Get(request)
+        case "POST":
+            response = ph.Post(request)
+        case "PUT":
+            response = ph.Put(request)
+        case "PATCH":
+            response = ph.Patch(request)
+        case "DELETE":
+            response = ph.Delete(request)
+        case "OPTIONS":
+            response = ph.Options(request)
+        default:
+            response = ph.ErrorHandler("Unsupported HTTP Method")
+        }
+    }
+
+    // Always run postprocess for middlewares.
     RunMiddlewarePostprocess(request, response)
 
+    // Finish off the response by writing the output.
     writePatternResponse(response, w)
 
     LogInfo.Printf("%d %s %s (%s) %s",
@@ -147,7 +158,6 @@ func (ph *patHandler) ServeHandlerHttp(w http.ResponseWriter, r *http.Request, p
         r.RequestURI,
         r.RemoteAddr,
         time.Since(start_request))
-
 }
 
 func (ph *patHandler) try(path string) (url.Values, bool) {
