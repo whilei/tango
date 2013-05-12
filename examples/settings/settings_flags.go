@@ -11,7 +11,11 @@ type IndexHandler struct {
     tango.BaseHandler
 }
 
-func (h IndexHandler) Get(request *tango.HttpRequest) *tango.HttpResponse {
+func (h *IndexHandler) New() tango.HandlerInterface {
+    return &IndexHandler{}
+}
+
+func (h *IndexHandler) Get(request *tango.HttpRequest) *tango.HttpResponse {
     debug := fmt.Sprintf("Debug: <b>%v</b>", tango.Debug)
     number := fmt.Sprintf("Some Number: <b>%d</b>", tango.Settings.Int("some_number"))
     bad := fmt.Sprintf("Not Set: <b>%s</b>", tango.Settings.String("not_set", "but we supplied a default!"))
@@ -34,6 +38,6 @@ func init() {
 }
 
 func main() {
-    tango.Pattern("/", IndexHandler{})
+    tango.Pattern("/", &IndexHandler{})
     tango.ListenAndServe()
 }

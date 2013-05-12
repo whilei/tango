@@ -1,6 +1,6 @@
 package tango
 
-var Middlewares = []MiddlewareInterface{}
+var middlewares = []MiddlewareInterface{}
 
 type MiddlewareInterface interface {
     ProcessRequest(request *HttpRequest, response *HttpResponse)
@@ -18,13 +18,13 @@ func (m BaseMiddleware) ProcessResponse(request *HttpRequest, response *HttpResp
 }
 
 func Middleware(m MiddlewareInterface) {
-    Middlewares = append(Middlewares, m)
+    middlewares = append(middlewares, m)
 }
 
-func RunMiddlewarePreprocess(request *HttpRequest, response *HttpResponse) {
+func runMiddlewarePreprocess(request *HttpRequest, response *HttpResponse) {
     // Top to bottom.
-    for i := 0; i < len(Middlewares); i++ {
-        m := Middlewares[i]
+    for i := 0; i < len(middlewares); i++ {
+        m := middlewares[i]
         m.ProcessRequest(request, response)
 
         // If the middleware obj has set the response as finished, then no need to continue.
@@ -34,10 +34,10 @@ func RunMiddlewarePreprocess(request *HttpRequest, response *HttpResponse) {
     }
 }
 
-func RunMiddlewarePostprocess(request *HttpRequest, response *HttpResponse) {
+func runMiddlewarePostprocess(request *HttpRequest, response *HttpResponse) {
     // Bottom to top.
-    for i := len(Middlewares) - 1; i >= 0; i-- {
-        m := Middlewares[i]
+    for i := len(middlewares) - 1; i >= 0; i-- {
+        m := middlewares[i]
         m.ProcessResponse(request, response)
     }
 }

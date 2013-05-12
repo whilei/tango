@@ -6,7 +6,11 @@ import (
 
 type IndexHandler struct{ tango.BaseHandler }
 
-func (h IndexHandler) Get(request *tango.HttpRequest) *tango.HttpResponse {
+func (h *IndexHandler) New() tango.HandlerInterface {
+    return &IndexHandler{}
+}
+
+func (h *IndexHandler) Get(request *tango.HttpRequest) *tango.HttpResponse {
     return tango.NewHttpResponse("Hello, world.")
 }
 

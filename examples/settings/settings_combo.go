@@ -12,7 +12,11 @@ type IndexHandler struct {
     tango.BaseHandler
 }
 
-func (h IndexHandler) Get(request *tango.HttpRequest) *tango.HttpResponse {
+func (h *IndexHandler) New() tango.HandlerInterface {
+    return &IndexHandler{}
+}
+
+func (h *IndexHandler) Get(request *tango.HttpRequest) *tango.HttpResponse {
     inline := fmt.Sprintf("Inline: <b>%s</b>", tango.Settings.String("inline"))
     json := fmt.Sprintf("A json val: <b>%s</b>", tango.Settings.String("project_name"))
     env := fmt.Sprintf("DB Pass from Env: <b>%s</b>", tango.Settings.String("db_pass"))
@@ -38,6 +42,6 @@ func init() {
 }
 
 func main() {
-    tango.Pattern("/", IndexHandler{})
+    tango.Pattern("/", &IndexHandler{})
     tango.ListenAndServe()
 }

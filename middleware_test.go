@@ -18,18 +18,21 @@ func init() {
 //---
 type MiddleHandler struct{ BaseHandler }
 
-func (h MiddleHandler) Get(request *HttpRequest) *HttpResponse {
+func (h *MiddleHandler) New() HandlerInterface {
+    return &MiddleHandler{}
+}
+func (h *MiddleHandler) Get(request *HttpRequest) *HttpResponse {
     return NewHttpResponse("foo")
 }
 
 //---
 type Firstware struct{ BaseMiddleware }
 
-func (m Firstware) ProcessRequest(request *HttpRequest, response *HttpResponse) {
+func (m *Firstware) ProcessRequest(request *HttpRequest, response *HttpResponse) {
     request.Header.Set("X-pre", "superman")
 }
 
-func (m Firstware) ProcessResponse(request *HttpRequest, response *HttpResponse) {
+func (m *Firstware) ProcessResponse(request *HttpRequest, response *HttpResponse) {
     response.Header.Set("X-post", request.Header.Get("X-pre"))
     response.Content = "bar"
 }
@@ -37,23 +40,23 @@ func (m Firstware) ProcessResponse(request *HttpRequest, response *HttpResponse)
 //---
 type Secondware struct{ BaseMiddleware }
 
-func (m Secondware) ProcessRequest(request *HttpRequest, response *HttpResponse) {
+func (m *Secondware) ProcessRequest(request *HttpRequest, response *HttpResponse) {
     request.Header.Set("X-pre", "batman")
 }
 
 //---
 type Thirdware struct{ BaseMiddleware }
 
-func (m Thirdware) ProcessResponse(request *HttpRequest, response *HttpResponse) {
+func (m *Thirdware) ProcessResponse(request *HttpRequest, response *HttpResponse) {
     response.Content = "foobar"
 }
 
 //---
 func TestBasicMiddleware(t *testing.T) {
     defer func() { Mux = &PatternServeMux{} }()
-    defer func() { Middlewares = []MiddlewareInterface{} }()
-    Pattern("/", MiddleHandler{})
-    Middleware(Firstware{})
+    defer func() { middlewares = []MiddlewareInterface{} }()
+    Pattern("/", &MiddleHandler{})
+    Middleware(&Firstware{})
 
     r, _ := http.NewRequest("GET", "/", nil)
     rec := httptest.NewRecorder()
@@ -66,10 +69,10 @@ func TestBasicMiddleware(t *testing.T) {
 
 func TestOrderOfMiddleware(t *testing.T) {
     defer func() { Mux = &PatternServeMux{} }()
-    defer func() { Middlewares = []MiddlewareInterface{} }()
-    Pattern("/", MiddleHandler{})
-    Middleware(Firstware{})
-    Middleware(Secondware{})
+    defer func() { middlewares = []MiddlewareInterface{} }()
+    Pattern("/", &MiddleHandler{})
+    Middleware(&Firstware{})
+    Middleware(&Secondware{})
 
     r, _ := http.NewRequest("GET", "/", nil)
     rec := httptest.NewRecorder()
@@ -81,10 +84,10 @@ func TestOrderOfMiddleware(t *testing.T) {
 
 func TestOrderOfMiddlewareReversed(t *testing.T) {
     defer func() { Mux = &PatternServeMux{} }()
-    defer func() { Middlewares = []MiddlewareInterface{} }()
-    Pattern("/", MiddleHandler{})
-    Middleware(Secondware{})
-    Middleware(Firstware{})
+    defer func() { middlewares = []MiddlewareInterface{} }()
+    Pattern("/", &MiddleHandler{})
+    Middleware(&Secondware{})
+    Middleware(&Firstware{})
 
     r, _ := http.NewRequest("GET", "/", nil)
     rec := httptest.NewRecorder()
@@ -96,11 +99,11 @@ func TestOrderOfMiddlewareReversed(t *testing.T) {
 
 func TestMultiMiddleware(t *testing.T) {
     defer func() { Mux = &PatternServeMux{} }()
-    defer func() { Middlewares = []MiddlewareInterface{} }()
-    Pattern("/", MiddleHandler{})
-    Middleware(Thirdware{})
-    Middleware(Firstware{})
-    Middleware(Secondware{})
+    defer func() { middlewares = []MiddlewareInterface{} }()
+    Pattern("/", &MiddleHandler{})
+    Middleware(&Thirdware{})
+    Middleware(&Firstware{})
+    Middleware(&Secondware{})
 
     r, _ := http.NewRequest("GET", "/", nil)
     rec := httptest.NewRecorder()

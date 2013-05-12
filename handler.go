@@ -9,6 +9,7 @@ import (
 )
 
 type HandlerInterface interface {
+    New() HandlerInterface
     Head(request *HttpRequest) *HttpResponse
     Get(request *HttpRequest) *HttpResponse
     Post(request *HttpRequest) *HttpResponse
@@ -24,55 +25,55 @@ type HandlerInterface interface {
 
 type BaseHandler struct{}
 
-func (h BaseHandler) ErrorHandler(errorStr string) *HttpResponse {
+func (h *BaseHandler) ErrorHandler(errorStr string) *HttpResponse {
     return h.HttpResponseServerError()
 }
 
-func (h BaseHandler) Prepare(request *HttpRequest, response *HttpResponse) {
+func (h *BaseHandler) Prepare(request *HttpRequest, response *HttpResponse) {
     // pass
 }
 
-func (h BaseHandler) Finish(request *HttpRequest, response *HttpResponse) {
+func (h *BaseHandler) Finish(request *HttpRequest, response *HttpResponse) {
     // pass
 }
 
-func (h BaseHandler) Head(request *HttpRequest) *HttpResponse {
+func (h *BaseHandler) Head(request *HttpRequest) *HttpResponse {
     return h.HttpResponseNotAllowed()
 }
 
-func (h BaseHandler) Get(request *HttpRequest) *HttpResponse {
+func (h *BaseHandler) Get(request *HttpRequest) *HttpResponse {
     return h.HttpResponseNotAllowed()
 }
 
-func (h BaseHandler) Post(request *HttpRequest) *HttpResponse {
+func (h *BaseHandler) Post(request *HttpRequest) *HttpResponse {
     return h.HttpResponseNotAllowed()
 }
 
-func (h BaseHandler) Put(request *HttpRequest) *HttpResponse {
+func (h *BaseHandler) Put(request *HttpRequest) *HttpResponse {
     return h.HttpResponseNotAllowed()
 }
 
-func (h BaseHandler) Patch(request *HttpRequest) *HttpResponse {
+func (h *BaseHandler) Patch(request *HttpRequest) *HttpResponse {
     return h.HttpResponseNotAllowed()
 }
 
-func (h BaseHandler) Delete(request *HttpRequest) *HttpResponse {
+func (h *BaseHandler) Delete(request *HttpRequest) *HttpResponse {
     return h.HttpResponseNotAllowed()
 }
 
-func (h BaseHandler) Options(request *HttpRequest) *HttpResponse {
+func (h *BaseHandler) Options(request *HttpRequest) *HttpResponse {
     return h.HttpResponseNotAllowed()
 }
 
-func (h BaseHandler) PermanentRedirect(request *HttpRequest, urlStr string) *HttpResponse {
+func (h *BaseHandler) PermanentRedirect(request *HttpRequest, urlStr string) *HttpResponse {
     return h.redirect(request, urlStr, http.StatusMovedPermanently)
 }
 
-func (h BaseHandler) TemporaryRedirect(request *HttpRequest, urlStr string) *HttpResponse {
+func (h *BaseHandler) TemporaryRedirect(request *HttpRequest, urlStr string) *HttpResponse {
     return h.redirect(request, urlStr, http.StatusTemporaryRedirect)
 }
 
-func (h BaseHandler) redirect(r *HttpRequest, urlStr string, code int) *HttpResponse {
+func (h *BaseHandler) redirect(r *HttpRequest, urlStr string, code int) *HttpResponse {
     // Borrowed from http://golang.org/pkg/net/http/#Redirect
     if u, err := url.Parse(urlStr); err == nil {
         oldpath := r.URL.Path
@@ -114,31 +115,31 @@ func (h BaseHandler) redirect(r *HttpRequest, urlStr string, code int) *HttpResp
     return response
 }
 
-func (h BaseHandler) HttpResponseNotModified() *HttpResponse {
+func (h *BaseHandler) HttpResponseNotModified() *HttpResponse {
     return shortHttpReturn(http.StatusNotModified)
 }
 
-func (h BaseHandler) HttpResponseBadRequest() *HttpResponse {
+func (h *BaseHandler) HttpResponseBadRequest() *HttpResponse {
     return shortHttpReturn(http.StatusBadRequest)
 }
 
-func (h BaseHandler) HttpResponseForbidden() *HttpResponse {
+func (h *BaseHandler) HttpResponseForbidden() *HttpResponse {
     return shortHttpReturn(http.StatusForbidden)
 }
 
-func (h BaseHandler) HttpResponseNotFound() *HttpResponse {
+func (h *BaseHandler) HttpResponseNotFound() *HttpResponse {
     return shortHttpReturn(http.StatusNotFound)
 }
 
-func (h BaseHandler) HttpResponseNotAllowed() *HttpResponse {
+func (h *BaseHandler) HttpResponseNotAllowed() *HttpResponse {
     return shortHttpReturn(http.StatusMethodNotAllowed)
 }
 
-func (h BaseHandler) HttpResponseGone() *HttpResponse {
+func (h *BaseHandler) HttpResponseGone() *HttpResponse {
     return shortHttpReturn(http.StatusGone)
 }
 
-func (h BaseHandler) HttpResponseServerError() *HttpResponse {
+func (h *BaseHandler) HttpResponseServerError() *HttpResponse {
     return shortHttpReturn(http.StatusInternalServerError)
 }
 

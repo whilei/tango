@@ -12,11 +12,11 @@ type RuntimeProfile struct {
     tango.BaseMiddleware
 }
 
-func (m RuntimeProfile) ProcessRequest(request *tango.HttpRequest, response *tango.HttpResponse) {
+func (m *RuntimeProfile) ProcessRequest(request *tango.HttpRequest, response *tango.HttpResponse) {
     request.Registry[runTimeContextKey] = time.Now()
 }
 
-func (m RuntimeProfile) ProcessResponse(request *tango.HttpRequest, response *tango.HttpResponse) {
+func (m *RuntimeProfile) ProcessResponse(request *tango.HttpRequest, response *tango.HttpResponse) {
     started := request.Registry[runTimeContextKey]
     response.Header.Set("X-Runtime", fmt.Sprintf("%s", time.Since(started.(time.Time))))
 }

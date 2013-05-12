@@ -10,7 +10,11 @@ type IndexHandler struct {
     tango.BaseHandler
 }
 
-func (h IndexHandler) Get(request *tango.HttpRequest) *tango.HttpResponse {
+func (h *IndexHandler) New() tango.HandlerInterface {
+    return &IndexHandler{}
+}
+
+func (h *IndexHandler) Get(request *tango.HttpRequest) *tango.HttpResponse {
     project := fmt.Sprintf("Project Name: <b>%s</b>", tango.Settings.String("project_name"))
     number := fmt.Sprintf("Some Number: <b>%d</b>", tango.Settings.Int("some_number"))
     other := fmt.Sprintf("Some Other Number: <b>%f</b>", tango.Settings.Float("some_other_number"))
@@ -28,6 +32,6 @@ func init() {
 }
 
 func main() {
-    tango.Pattern("/", IndexHandler{})
+    tango.Pattern("/", &IndexHandler{})
     tango.ListenAndServe()
 }

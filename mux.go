@@ -59,36 +59,6 @@ func buildUrlWithSlash(r *http.Request) string {
     return result
 }
 
-// Tail returns the trailing string in path after the final slash for a pat ending with a slash.
-//
-// Examples:
-//
-//  Tail("/hello/:title/", "/hello/mr/mizerany") == "mizerany"
-//  Tail("/:a/", "/x/y/z")                       == "y/z"
-//
-func Tail(pat, path string) string {
-    var i, j int
-    for i < len(path) {
-        switch {
-        case j >= len(pat):
-            if pat[len(pat)-1] == '/' {
-                return path[j-1:]
-            }
-            return ""
-        case pat[j] == ':':
-            var nextc byte
-            _, nextc, j = match(pat, isAlnum, j+1)
-            _, _, i = match(path, matchPart(nextc), i)
-        case path[i] == pat[j]:
-            i++
-            j++
-        default:
-            return ""
-        }
-    }
-    return ""
-}
-
 type patHandler struct {
     pat string
     HandlerInterface
@@ -96,24 +66,27 @@ type patHandler struct {
 }
 
 func (ph *patHandler) ServeHandlerHttp(w http.ResponseWriter, r *http.Request, params url.Values) {
+    handler := ph.New()
+
     // Any panic errors will be caught and passed over to our ErrorHandler.
     defer func() {
         if rec := recover(); rec != nil {
             LogError.Printf("Panic Recovered: %s", rec)
-            writePatternResponse(ph.ErrorHandler(fmt.Sprintf("%q", rec)), w)
+            writePatternResponse(handler.ErrorHandler(fmt.Sprintf("%q", rec)), w)
         }
     }()
 
     start_request := time.Now()
+    runMixinPrepare(handler)
 
     request := NewHttpRequest(r, params)
     response := NewHttpResponse()
-    RunMiddlewarePreprocess(request, response)
+    runMiddlewarePreprocess(request, response)
 
     // Only if the response has not finished should we let the handler touch it.
     if !response.isFinished {
-        ph.Prepare(request, response)
-        defer ph.Finish(request, response)
+        handler.Prepare(request, response)
+        defer handler.Finish(request, response)
     }
 
     // And again, the prepare method has the ability to halt the response, so check again.
@@ -121,36 +94,38 @@ func (ph *patHandler) ServeHandlerHttp(w http.ResponseWriter, r *http.Request, p
         switch strings.ToUpper(r.Method) {
         case "HEAD":
             // If HEAD is not implemented, just trip the content from a regular GET request.
-            response = ph.Head(request)
+            response = handler.Head(request)
             if response.StatusCode == http.StatusMethodNotAllowed {
-                getResp := ph.Get(request)
+                getResp := handler.Get(request)
                 if getResp.StatusCode == http.StatusOK {
                     response = getResp
                     response.Content = ""
                 }
             }
         case "GET":
-            response = ph.Get(request)
+            response = handler.Get(request)
         case "POST":
-            response = ph.Post(request)
+            response = handler.Post(request)
         case "PUT":
-            response = ph.Put(request)
+            response = handler.Put(request)
         case "PATCH":
-            response = ph.Patch(request)
+            response = handler.Patch(request)
         case "DELETE":
-            response = ph.Delete(request)
+            response = handler.Delete(request)
         case "OPTIONS":
-            response = ph.Options(request)
+            response = handler.Options(request)
         default:
-            response = ph.ErrorHandler("Unsupported HTTP Method")
+            response = handler.ErrorHandler("Unsupported HTTP Method")
         }
     }
 
     // Always run postprocess for middlewares.
-    RunMiddlewarePostprocess(request, response)
+    runMiddlewarePostprocess(request, response)
 
     // Finish off the response by writing the output.
     writePatternResponse(response, w)
+
+    runMixinFinish(handler)
 
     LogInfo.Printf("%d %s %s (%s) %s",
         response.StatusCode,
