@@ -77,11 +77,16 @@ func (ph *patHandler) ServeHandlerHttp(w http.ResponseWriter, r *http.Request, p
     }()
 
     start_request := time.Now()
-    runMixinPrepare(handler)
-
     request := NewHttpRequest(r, params)
     response := NewHttpResponse()
+
+    runMixinPrepare(handler)
+    defer runMixinFinish(handler)
+
+    // TODO: Add request / response to Mixins??
+    //if !response.isFinished {
     runMiddlewarePreprocess(request, response)
+    //}
 
     // Only if the response has not finished should we let the handler touch it.
     if !response.isFinished {
@@ -124,8 +129,6 @@ func (ph *patHandler) ServeHandlerHttp(w http.ResponseWriter, r *http.Request, p
 
     // Finish off the response by writing the output.
     writePatternResponse(response, w)
-
-    runMixinFinish(handler)
 
     LogInfo.Printf("%d %s %s (%s) %s",
         response.StatusCode,

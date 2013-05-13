@@ -9,11 +9,11 @@ type MiddlewareInterface interface {
 
 type BaseMiddleware struct{}
 
-func (m BaseMiddleware) ProcessRequest(request *HttpRequest, response *HttpResponse) {
+func (m *BaseMiddleware) ProcessRequest(request *HttpRequest, response *HttpResponse) {
     // pass
 }
 
-func (m BaseMiddleware) ProcessResponse(request *HttpRequest, response *HttpResponse) {
+func (m *BaseMiddleware) ProcessResponse(request *HttpRequest, response *HttpResponse) {
     // pass
 }
 

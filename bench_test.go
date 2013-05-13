@@ -1,4 +1,4 @@
-// Go 1.1: go test -bench=.
+// Run cmd: go test -bench=.
 package tango
 
 import (

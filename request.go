@@ -29,7 +29,7 @@ func NewHttpRequest(orig *http.Request, params url.Values) *HttpRequest {
 }
 
 //Info methods.
-func (r HttpRequest) IsSecure() bool {
+func (r *HttpRequest) IsSecure() bool {
     if strings.EqualFold(r.URL.Scheme, "https") {
         return true
     }
@@ -45,7 +45,7 @@ func (r HttpRequest) IsSecure() bool {
     return false
 }
 
-func (r HttpRequest) IsAjax() bool {
+func (r *HttpRequest) IsAjax() bool {
     xhr, ok := r.Header["X-Requested-With"]
     if !ok {
         return false
@@ -61,7 +61,7 @@ func (r HttpRequest) IsAjax() bool {
 }
 
 // Retrive specific values.
-func (r HttpRequest) PathValue(key string) (string, bool) {
+func (r *HttpRequest) PathValue(key string) (string, bool) {
     val, ok := r.PathArgs[key]
     if ok {
         return val[0], ok
@@ -69,7 +69,7 @@ func (r HttpRequest) PathValue(key string) (string, bool) {
     return "", ok
 }
 
-func (r HttpRequest) GetValue(key string) (string, bool) {
+func (r *HttpRequest) GetValue(key string) (string, bool) {
     val, ok := r.URL.Query()[key]
     if ok {
         return val[0], ok
@@ -77,12 +77,12 @@ func (r HttpRequest) GetValue(key string) (string, bool) {
     return "", ok
 }
 
-func (r HttpRequest) GetArray(key string) ([]string, bool) {
+func (r *HttpRequest) GetArray(key string) ([]string, bool) {
     val, ok := r.URL.Query()[key]
     return val, ok
 }
 
-func (r HttpRequest) FormValue(key string) (string, bool) {
+func (r *HttpRequest) FormValue(key string) (string, bool) {
     val, ok := r.Form[key]
     if ok {
         return val[0], ok
@@ -90,11 +90,11 @@ func (r HttpRequest) FormValue(key string) (string, bool) {
     return "", ok
 }
 
-func (r HttpRequest) FormArray(key string) ([]string, bool) {
+func (r *HttpRequest) FormArray(key string) ([]string, bool) {
     val, ok := r.Form[key]
     return val, ok
 }
 
-func (r HttpRequest) FragmentValue() string {
+func (r *HttpRequest) FragmentValue() string {
     return r.URL.Fragment
 }

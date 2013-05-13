@@ -68,6 +68,41 @@ func TestHandlerHead(t *testing.T) {
 }
 
 //---
+var OneOffPreFinTestObj string
+
+type PrepFinHandler struct{ BaseHandler }
+
+func (h *PrepFinHandler) New() HandlerInterface {
+    OneOffPreFinTestObj = "NEW"
+    return &PrepFinHandler{}
+}
+func (h *PrepFinHandler) Get(request *HttpRequest) *HttpResponse {
+    return NewHttpResponse(OneOffPreFinTestObj)
+}
+func (h *PrepFinHandler) Prepare(r *HttpRequest, response *HttpResponse) {
+    OneOffPreFinTestObj = OneOffPreFinTestObj + "-PRE"
+}
+
+func (h *PrepFinHandler) Finish(r *HttpRequest, response *HttpResponse) {
+    OneOffPreFinTestObj = OneOffPreFinTestObj + "-FIN"
+}
+
+func TestHandlerPrepareFinish(t *testing.T) {
+    defer func() { Mux = &PatternServeMux{} }()
+    Pattern("/", &PrepFinHandler{})
+
+    r, _ := http.NewRequest("GET", "/", nil)
+    rec := httptest.NewRecorder()
+    Mux.ServeHTTP(rec, r)
+
+    assert.Equal(t, http.StatusOK, rec.Code)
+    assert.Equal(t, "NEW-PRE", rec.Body.String())
+    assert.Equal(t, "NEW-PRE-FIN", OneOffPreFinTestObj)
+}
+
+//---
+
+//---
 type GenericHandler struct{ BaseHandler }
 
 func (h *GenericHandler) New() HandlerInterface {
@@ -266,5 +301,7 @@ func TestHandlerAllowedMethods(t *testing.T) {
     rec = httptest.NewRecorder()
     Mux.ServeHTTP(rec, r)
     assert.Equal(t, http.StatusMethodNotAllowed, rec.Code)
+
+    // TODO: Still need to fix this sometime down the road.
     //assert.Equal(t, "GET,POST", rec.Header().Get("Allow"))
 }

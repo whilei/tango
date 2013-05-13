@@ -58,10 +58,6 @@ func (s *DictObj) Set(key string, val interface{}) {
 func (s *DictObj) SetFromEnv(key, envKey string, args ...interface{}) {
     envVal, ok := syscall.Getenv(envKey)
 
-    if ok {
-        s.data[key] = envVal
-    }
-
     switch len(args) {
     case 0:
         break
@@ -69,6 +65,10 @@ func (s *DictObj) SetFromEnv(key, envKey string, args ...interface{}) {
         s.data[key] = args[0]
     default:
         panic(fmt.Sprintf("SetFromEnv received too many args: [%d]", len(args)))
+    }
+
+    if ok {
+        s.data[key] = envVal
     }
 
     if key == "debug" {

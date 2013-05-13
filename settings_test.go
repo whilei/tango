@@ -3,6 +3,7 @@ package tango
 import (
     "encoding/json"
     "github.com/bmizerany/assert"
+    "syscall"
     "testing"
 )
 
@@ -30,8 +31,16 @@ func TestSettingsSetFromEnv(t *testing.T) {
     dictObj.SetFromEnv("a", "bad_key_here", false)
     assert.Equal(t, false, dictObj.Bool("a"))
 
+    dictObj.SetFromEnv("b", "no_args")
+    assert.Equal(t, false, dictObj.Bool("b"))
+
     dictObj.SetFromEnv("debug", "bad_key_here222", true)
     assert.Equal(t, true, Debug)
+
+    if tempPath, ok := syscall.Getenv("PATH"); ok {
+        dictObj.SetFromEnv("mypath", "PATH", "NA")
+        assert.Equal(t, tempPath, dictObj.String("mypath", "NOT NA!!"))
+    }
 
     assert.Panic(t, "SetFromEnv received too many args: [2]", func() {
         dictObj.SetFromEnv("z", "bbaadddddd", false, true)

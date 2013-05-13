@@ -47,6 +47,6 @@ func NewHttpResponse(args ...interface{}) *HttpResponse {
     return r
 }
 
-func (h HttpResponse) Finish() {
+func (h *HttpResponse) Finish() {
     h.isFinished = true
 }

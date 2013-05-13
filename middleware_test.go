@@ -52,6 +52,14 @@ func (m *Thirdware) ProcessResponse(request *HttpRequest, response *HttpResponse
 }
 
 //---
+type Finishware struct{ BaseMiddleware }
+
+func (m *Finishware) ProcessRequest(request *HttpRequest, response *HttpResponse) {
+    request.Header.Set("X-pre", "FIRST")
+    response.Finish()
+}
+
+//---
 func TestBasicMiddleware(t *testing.T) {
     defer func() { Mux = &PatternServeMux{} }()
     defer func() { middlewares = []MiddlewareInterface{} }()
@@ -64,6 +72,24 @@ func TestBasicMiddleware(t *testing.T) {
     assert.Equal(t, http.StatusOK, rec.Code)
     assert.Equal(t, "bar", rec.Body.String())
     assert.Equal(t, "superman", rec.Header().Get("X-post"))
+
+}
+
+func TestFinishMiddleware(t *testing.T) {
+    defer func() { Mux = &PatternServeMux{} }()
+    defer func() { middlewares = []MiddlewareInterface{} }()
+    Pattern("/", &MiddleHandler{})
+
+    // Finish should not allow Firstware to be called.
+    Middleware(&Finishware{})
+    Middleware(&Firstware{})
+
+    r, _ := http.NewRequest("GET", "/", nil)
+    rec := httptest.NewRecorder()
+    Mux.ServeHTTP(rec, r)
+    assert.Equal(t, http.StatusOK, rec.Code)
+    assert.Equal(t, "bar", rec.Body.String())
+    assert.Equal(t, "FIRST", rec.Header().Get("X-post"))
 
 }
 
