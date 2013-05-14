@@ -29,12 +29,13 @@ func (m *PostgresMixin) FinishPostgresMixin() {
 
 func initPostgresConnection() (interface{}, error) {
     LogInfo.Println("Creating Postgres Connection")
-    conf := fmt.Sprintf("dbname=%s user=%s password=%s host=%s port=%d",
+    conf := fmt.Sprintf("dbname=%s user=%s password=%s host=%s port=%d sslmode=%s",
         Settings.String("db_name"),
         Settings.String("db_user"),
         Settings.String("db_password", ""),
         Settings.String("db_host", "127.0.0.1"),
-        Settings.String("db_port", "5678"))
+        Settings.Int("db_port", 5432),
+        Settings.String("db_sslmode", "disable"))
     return sql.Open("postgres", conf)
 }
 
