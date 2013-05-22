@@ -94,7 +94,7 @@ func (h *BaseHandler) redirect(r *HttpRequest, urlStr string, code int) *HttpRes
 
             trailing := urlStr[len(urlStr)-1] == '/'
             urlStr = path.Clean(urlStr)
-            if trailing && urlStr[len(urlStr)-1] != '/' {
+            if trailing && !strings.HasSuffix(urlStr, "/") {
                 urlStr += "/"
             }
             urlStr += query
