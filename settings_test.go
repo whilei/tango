@@ -2,7 +2,7 @@ package tango
 
 import (
     "encoding/json"
-    "github.com/bmizerany/assert"
+    "github.com/cojac/assert"
     "syscall"
     "testing"
 )

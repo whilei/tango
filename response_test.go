@@ -1,7 +1,7 @@
 package tango
 
 import (
-    "github.com/bmizerany/assert"
+    "github.com/cojac/assert"
     "testing"
 )
 

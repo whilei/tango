@@ -2,7 +2,7 @@ package tango
 
 import (
     "bytes"
-    "github.com/bmizerany/assert"
+    "github.com/cojac/assert"
     "net/http"
     "net/url"
     "testing"
