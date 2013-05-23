@@ -9,7 +9,7 @@ import (
 
 type IndexHandler struct {
     tango.BaseHandler
-    postgres.Mixin // This allows us to reference 'DB' within our handler (see below).
+    postgres.PostgresMixin // This allows us to reference 'DB' within our handler (see below).
 }
 
 func (h *IndexHandler) New() tango.HandlerInterface {
@@ -50,7 +50,7 @@ func init() {
     tango.Settings.Set("db_sslmode", "disable")
 
     // Add the Postgres mixin to our app.
-    tango.Mixin(&postgres.Mixin{})
+    tango.Mixin(&postgres.PostgresMixin{})
 
     tango.Pattern("/", &IndexHandler{})
 }
