@@ -25,8 +25,10 @@ func (h *IndexHandler) Get(request *HttpRequest) *HttpResponse {
 //---
 type Benchware struct{ BaseMiddleware }
 
-func (m *Benchware) ProcessRequest(request *HttpRequest, response *HttpResponse) {
+func (m *Benchware) ProcessRequest(request *HttpRequest) *HttpResponse {
     request.Header.Set("X-pre", "superman")
+
+    return nil
 }
 
 func (m *Benchware) ProcessResponse(request *HttpRequest, response *HttpResponse) {

@@ -18,7 +18,7 @@ type HandlerInterface interface {
     Delete(request *HttpRequest) *HttpResponse
     Options(request *HttpRequest) *HttpResponse
 
-    Prepare(request *HttpRequest, response *HttpResponse)
+    Prepare(request *HttpRequest) *HttpResponse
     Finish(request *HttpRequest, response *HttpResponse)
     ErrorHandler(errorStr string) *HttpResponse
 }
@@ -29,8 +29,8 @@ func (h *BaseHandler) ErrorHandler(errorStr string) *HttpResponse {
     return h.HttpResponseServerError()
 }
 
-func (h *BaseHandler) Prepare(request *HttpRequest, response *HttpResponse) {
-    // pass
+func (h *BaseHandler) Prepare(request *HttpRequest) *HttpResponse {
+    return nil
 }
 
 func (h *BaseHandler) Finish(request *HttpRequest, response *HttpResponse) {

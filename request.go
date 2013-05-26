@@ -15,7 +15,7 @@ type HttpRequest struct {
 }
 
 func NewHttpRequest(orig *http.Request, params url.Values) *HttpRequest {
-    r := HttpRequest{*orig, "", params, make(map[string]interface{})}
+    r := &HttpRequest{*orig, "", params, make(map[string]interface{})}
 
     if r.Body != nil {
         strBody, err := ioutil.ReadAll(r.Body)
@@ -25,7 +25,7 @@ func NewHttpRequest(orig *http.Request, params url.Values) *HttpRequest {
         r.BodyString = string(strBody)
     }
 
-    return &r
+    return r
 }
 
 //Info methods.

@@ -28,8 +28,10 @@ func (h *MiddleHandler) Get(request *HttpRequest) *HttpResponse {
 //---
 type Firstware struct{ BaseMiddleware }
 
-func (m *Firstware) ProcessRequest(request *HttpRequest, response *HttpResponse) {
+func (m *Firstware) ProcessRequest(request *HttpRequest) *HttpResponse {
     request.Header.Set("X-pre", "superman")
+
+    return nil
 }
 
 func (m *Firstware) ProcessResponse(request *HttpRequest, response *HttpResponse) {
@@ -40,8 +42,10 @@ func (m *Firstware) ProcessResponse(request *HttpRequest, response *HttpResponse
 //---
 type Secondware struct{ BaseMiddleware }
 
-func (m *Secondware) ProcessRequest(request *HttpRequest, response *HttpResponse) {
+func (m *Secondware) ProcessRequest(request *HttpRequest) *HttpResponse {
     request.Header.Set("X-pre", "batman")
+
+    return nil
 }
 
 //---
@@ -54,12 +58,26 @@ func (m *Thirdware) ProcessResponse(request *HttpRequest, response *HttpResponse
 //---
 type Finishware struct{ BaseMiddleware }
 
-func (m *Finishware) ProcessRequest(request *HttpRequest, response *HttpResponse) {
+func (m *Finishware) ProcessRequest(request *HttpRequest) *HttpResponse {
     request.Header.Set("X-pre", "FIRST")
-    response.Finish()
+
+    return NewHttpResponse("Ending request early.")
 }
 
 //---
+func TestEarlyResponseMiddleware(t *testing.T) {
+    defer func() { Mux = &PatternServeMux{} }()
+    defer func() { middlewares = []MiddlewareInterface{} }()
+    Pattern("/", &MiddleHandler{})
+    Middleware(&Finishware{})
+
+    r, _ := http.NewRequest("GET", "/", nil)
+    rec := httptest.NewRecorder()
+    Mux.ServeHTTP(rec, r)
+    assert.Equal(t, http.StatusOK, rec.Code)
+    assert.Equal(t, "Ending request early.", rec.Body.String())
+}
+
 func TestBasicMiddleware(t *testing.T) {
     defer func() { Mux = &PatternServeMux{} }()
     defer func() { middlewares = []MiddlewareInterface{} }()
@@ -72,7 +90,6 @@ func TestBasicMiddleware(t *testing.T) {
     assert.Equal(t, http.StatusOK, rec.Code)
     assert.Equal(t, "bar", rec.Body.String())
     assert.Equal(t, "superman", rec.Header().Get("X-post"))
-
 }
 
 func TestFinishMiddleware(t *testing.T) {

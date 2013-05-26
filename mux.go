@@ -34,6 +34,16 @@ func (p *PatternServeMux) ServeHTTP(w http.ResponseWriter, r *http.Request) {
     }
 }
 
+func (p *PatternServeMux) ServeTestResponse(r *http.Request) *HttpResponse {
+    for _, ph := range p.handlers {
+        if params, ok := ph.try(r.URL.Path); ok {
+            return ph.processRequest(r, params)
+        }
+    }
+
+    return nil
+}
+
 func Pattern(pat string, h HandlerInterface) {
     Mux.handlers = append(Mux.handlers, &patHandler{pat, h, false})
 
@@ -65,67 +75,84 @@ type patHandler struct {
     isSlashRedirect bool
 }
 
-func (ph *patHandler) ServeHandlerHttp(w http.ResponseWriter, r *http.Request, params url.Values) {
+func (ph *patHandler) processRequest(r *http.Request, params url.Values) *HttpResponse {
     handler := ph.New()
 
-    // Any panic errors will be caught and passed over to our ErrorHandler.
-    defer func() {
-        if rec := recover(); rec != nil {
-            LogError.Printf("Panic Recovered: %s", rec)
-            writePatternResponse(handler.ErrorHandler(fmt.Sprintf("%q", rec)), w)
+    var response *HttpResponse
+
+    func() {
+        // Any panic errors will be caught and passed over to our ErrorHandler.
+        defer func() {
+            if rec := recover(); rec != nil {
+                LogError.Printf("Panic Recovered: %s", rec)
+                response = handler.ErrorHandler(fmt.Sprintf("%q", rec))
+            }
+        }()
+
+        response = NewHttpResponse()
+        finished := false
+        request := NewHttpRequest(r, params)
+
+        runMixinPrepare(handler)
+        defer runMixinFinish(handler)
+
+        midResp := runMiddlewarePreprocess(request)
+        if midResp != nil {
+            finished = true
+            response = midResp
         }
+
+        // Only if the response has not finished should we let the handler touch it.
+        if !finished {
+            prepResp := handler.Prepare(request)
+            if prepResp != nil {
+                finished = true
+                response = prepResp
+            }
+            defer handler.Finish(request, response)
+        }
+
+        // And again, the prepare method has the ability to halt the response, so check again.
+        if !finished {
+            switch strings.ToUpper(r.Method) {
+            case "HEAD":
+                // If HEAD is not implemented, just trip the content from a regular GET request.
+                response = handler.Head(request)
+                if response.StatusCode == http.StatusMethodNotAllowed {
+                    getResp := handler.Get(request)
+                    if getResp.StatusCode == http.StatusOK {
+                        response = getResp
+                        response.Content = ""
+                    }
+                }
+            case "GET":
+                response = handler.Get(request)
+            case "POST":
+                response = handler.Post(request)
+            case "PUT":
+                response = handler.Put(request)
+            case "PATCH":
+                response = handler.Patch(request)
+            case "DELETE":
+                response = handler.Delete(request)
+            case "OPTIONS":
+                response = handler.Options(request)
+            default:
+                response = handler.ErrorHandler("Unsupported HTTP Method")
+            }
+        }
+
+        // Always run postprocess for middlewares.
+        runMiddlewarePostprocess(request, response)
     }()
 
+    return response
+}
+
+func (ph *patHandler) ServeHandlerHttp(w http.ResponseWriter, r *http.Request, params url.Values) {
     start_request := time.Now()
-    request := NewHttpRequest(r, params)
-    response := NewHttpResponse()
 
-    runMixinPrepare(handler)
-    defer runMixinFinish(handler)
-
-    // TODO: Add request / response to Mixins??
-    //if !response.isFinished {
-    runMiddlewarePreprocess(request, response)
-    //}
-
-    // Only if the response has not finished should we let the handler touch it.
-    if !response.isFinished {
-        handler.Prepare(request, response)
-        defer handler.Finish(request, response)
-    }
-
-    // And again, the prepare method has the ability to halt the response, so check again.
-    if !response.isFinished {
-        switch strings.ToUpper(r.Method) {
-        case "HEAD":
-            // If HEAD is not implemented, just trip the content from a regular GET request.
-            response = handler.Head(request)
-            if response.StatusCode == http.StatusMethodNotAllowed {
-                getResp := handler.Get(request)
-                if getResp.StatusCode == http.StatusOK {
-                    response = getResp
-                    response.Content = ""
-                }
-            }
-        case "GET":
-            response = handler.Get(request)
-        case "POST":
-            response = handler.Post(request)
-        case "PUT":
-            response = handler.Put(request)
-        case "PATCH":
-            response = handler.Patch(request)
-        case "DELETE":
-            response = handler.Delete(request)
-        case "OPTIONS":
-            response = handler.Options(request)
-        default:
-            response = handler.ErrorHandler("Unsupported HTTP Method")
-        }
-    }
-
-    // Always run postprocess for middlewares.
-    runMiddlewarePostprocess(request, response)
+    response := ph.processRequest(r, params)
 
     // Finish off the response by writing the output.
     writePatternResponse(response, w)

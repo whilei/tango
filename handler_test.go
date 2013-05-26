@@ -79,8 +79,10 @@ func (h *PrepFinHandler) New() HandlerInterface {
 func (h *PrepFinHandler) Get(request *HttpRequest) *HttpResponse {
     return NewHttpResponse(OneOffPreFinTestObj)
 }
-func (h *PrepFinHandler) Prepare(r *HttpRequest, response *HttpResponse) {
+func (h *PrepFinHandler) Prepare(r *HttpRequest) *HttpResponse {
     OneOffPreFinTestObj = OneOffPreFinTestObj + "-PRE"
+
+    return nil
 }
 
 func (h *PrepFinHandler) Finish(r *HttpRequest, response *HttpResponse) {
