@@ -20,7 +20,7 @@ func NewHttpRequest(orig *http.Request, params url.Values) *HttpRequest {
     if r.Body != nil {
         strBody, err := ioutil.ReadAll(r.Body)
         if err != nil {
-            panic("Error reading body")
+            panic("Error reading request body")
         }
         r.BodyString = string(strBody)
     }
