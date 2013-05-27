@@ -18,6 +18,9 @@ type HandlerInterface interface {
     Delete(request *HttpRequest) *HttpResponse
     Options(request *HttpRequest) *HttpResponse
 
+    PermanentRedirect(request *HttpRequest, urlStr string) *HttpResponse
+    TemporaryRedirect(request *HttpRequest, urlStr string) *HttpResponse
+
     Prepare(request *HttpRequest) *HttpResponse
     Finish(request *HttpRequest, response *HttpResponse)
     ErrorHandler(errorStr string) *HttpResponse

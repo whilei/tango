@@ -8,6 +8,21 @@ import (
     "time"
 )
 
+// ---
+type NotFoundHandler struct{ BaseHandler }
+
+func (h *NotFoundHandler) New() HandlerInterface {
+    return &NotFoundHandler{}
+}
+func (h *NotFoundHandler) Get(request *HttpRequest) *HttpResponse {
+    return NewHttpResponse("Page not found", http.StatusNotFound, "text/plain")
+}
+
+var notFound HandlerInterface = &NotFoundHandler{}
+
+func SetNotFoundHandler(h HandlerInterface) { notFound = h }
+
+// ---
 type PatternServeMux struct {
     handlers []*patHandler
 }
@@ -24,7 +39,9 @@ func (p *PatternServeMux) ServeHTTP(w http.ResponseWriter, r *http.Request) {
     for _, ph := range p.handlers {
         if params, ok := ph.try(r.URL.Path); ok {
             if ph.isSlashRedirect {
-                http.Redirect(w, r, buildUrlWithSlash(r), http.StatusMovedPermanently)
+                handler := ph.New()
+                resp := handler.PermanentRedirect(NewHttpRequest(r, params), buildUrlWithSlash(r))
+                writePatternResponse(resp, w)
                 return
             }
 
@@ -32,11 +49,19 @@ func (p *PatternServeMux) ServeHTTP(w http.ResponseWriter, r *http.Request) {
             return
         }
     }
+
+    ph := &patHandler{"", notFound, false}
+    ph.ServeHandlerHttp(w, r, nil)
 }
 
 func (p *PatternServeMux) ServeTestResponse(r *http.Request) *HttpResponse {
     for _, ph := range p.handlers {
         if params, ok := ph.try(r.URL.Path); ok {
+            if ph.isSlashRedirect {
+                handler := ph.New()
+                return handler.PermanentRedirect(NewHttpRequest(r, params), buildUrlWithSlash(r))
+            }
+
             return ph.processRequest(r, params)
         }
     }
