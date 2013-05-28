@@ -41,7 +41,9 @@ func (h *BaseHandler) Finish(request *HttpRequest, response *HttpResponse) {
 }
 
 func (h *BaseHandler) Head(request *HttpRequest) *HttpResponse {
-    return h.HttpResponseNotAllowed()
+    // Special case: When Head is 'nil', we grab the Get response and strip
+    // out the content.
+    return nil
 }
 
 func (h *BaseHandler) Get(request *HttpRequest) *HttpResponse {

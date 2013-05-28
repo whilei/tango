@@ -9,20 +9,6 @@ import (
 )
 
 // ---
-type NotFoundHandler struct{ BaseHandler }
-
-func (h *NotFoundHandler) New() HandlerInterface {
-    return &NotFoundHandler{}
-}
-func (h *NotFoundHandler) Get(request *HttpRequest) *HttpResponse {
-    return NewHttpResponse("Page not found", http.StatusNotFound, "text/plain")
-}
-
-var notFound HandlerInterface = &NotFoundHandler{}
-
-func SetNotFoundHandler(h HandlerInterface) { notFound = h }
-
-// ---
 type PatternServeMux struct {
     handlers []*patHandler
 }
@@ -50,8 +36,7 @@ func (p *PatternServeMux) ServeHTTP(w http.ResponseWriter, r *http.Request) {
         }
     }
 
-    ph := &patHandler{"", notFound, false}
-    ph.ServeHandlerHttp(w, r, nil)
+    notFoundPatHandler.ServeHandlerHttp(w, r, nil)
 }
 
 func (p *PatternServeMux) ServeTestResponse(r *http.Request) *HttpResponse {
@@ -66,7 +51,7 @@ func (p *PatternServeMux) ServeTestResponse(r *http.Request) *HttpResponse {
         }
     }
 
-    return nil
+    return notFoundPatHandler.processRequest(r, nil)
 }
 
 func Pattern(pat string, h HandlerInterface) {
@@ -141,14 +126,11 @@ func (ph *patHandler) processRequest(r *http.Request, params url.Values) *HttpRe
         if !finished {
             switch strings.ToUpper(r.Method) {
             case "HEAD":
-                // If HEAD is not implemented, just trip the content from a regular GET request.
+                // If HEAD is not implemented, just strip the content from a regular GET request.
                 response = handler.Head(request)
-                if response.StatusCode == http.StatusMethodNotAllowed {
-                    getResp := handler.Get(request)
-                    if getResp.StatusCode == http.StatusOK {
-                        response = getResp
-                        response.Content = ""
-                    }
+                if response == nil {
+                    response = handler.Get(request)
+                    response.Content = ""
                 }
             case "GET":
                 response = handler.Get(request)
@@ -165,6 +147,10 @@ func (ph *patHandler) processRequest(r *http.Request, params url.Values) *HttpRe
             default:
                 response = handler.ErrorHandler("Unsupported HTTP Method")
             }
+        }
+
+        if response == nil {
+            panic("Response cannot be nil.")
         }
 
         // Always run postprocess for middlewares.
@@ -257,4 +243,35 @@ func writePatternResponse(response *HttpResponse, w http.ResponseWriter) {
 
     w.WriteHeader(response.StatusCode)
     w.Write([]byte(response.Content))
+}
+
+// 404 - Not Found
+type NotFoundHandler struct{ BaseHandler }
+
+func (h *NotFoundHandler) New() HandlerInterface {
+    return &NotFoundHandler{}
+}
+func (h *NotFoundHandler) Get(request *HttpRequest) *HttpResponse {
+    return NewHttpResponse("404 - Page not found.", http.StatusNotFound)
+}
+func (h *NotFoundHandler) Post(request *HttpRequest) *HttpResponse {
+    return h.Get(request)
+}
+func (h *NotFoundHandler) Put(request *HttpRequest) *HttpResponse {
+    return h.Get(request)
+}
+func (h *NotFoundHandler) Patch(request *HttpRequest) *HttpResponse {
+    return h.Get(request)
+}
+func (h *NotFoundHandler) Delete(request *HttpRequest) *HttpResponse {
+    return h.Get(request)
+}
+func (h *NotFoundHandler) Options(request *HttpRequest) *HttpResponse {
+    return h.Get(request)
+}
+
+var notFoundPatHandler *patHandler = &patHandler{"404", &NotFoundHandler{}, false}
+
+func SetNotFoundHandler(h HandlerInterface) {
+    notFoundPatHandler = &patHandler{"404", h, false}
 }
