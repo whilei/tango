@@ -12,9 +12,9 @@ type HttpTestResponse struct {
     *HttpResponse
 }
 
-func (h *HttpTestResponse) Json() interface{} {
-    v := new(interface{})
-    err := json.Unmarshal([]byte(h.Content), v)
+func (h *HttpTestResponse) JsonMap() map[string]interface{} {
+    v := make(map[string]interface{})
+    err := json.Unmarshal([]byte(h.Content), &v)
     if err != nil {
         return nil
     }
