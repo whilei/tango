@@ -22,6 +22,16 @@ func (h *HttpTestResponse) JsonMap() map[string]interface{} {
     return v
 }
 
+func (h *HttpTestResponse) JsonArray() []interface{} {
+    var v interface{}
+    err := json.Unmarshal([]byte(h.Content), &v)
+    if err != nil {
+        return nil
+    }
+
+    return v.([]interface{})
+}
+
 type testClient struct {
     t   *testing.T
 
