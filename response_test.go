@@ -50,3 +50,20 @@ func TestResponseNewToManyParams(t *testing.T) {
         NewHttpResponse("My Content", 202, "text/plain", "oops")
     })
 }
+
+func TestResponseNewArray(t *testing.T) {
+    resp := NewHttpResponse([1]string{"hellowww"})
+
+    assert.Equal(t, `["hellowww"]`, resp.Content)
+    assert.Equal(t, 200, resp.StatusCode)
+    assert.Equal(t, "application/json; charset=utf-8", resp.ContentType)
+}
+
+func TestResponseNewMap(t *testing.T) {
+    v := map[string]interface{}{"k": "value"}
+    resp := NewHttpResponse(v)
+
+    assert.Equal(t, `{"k":"value"}`, resp.Content)
+    assert.Equal(t, 200, resp.StatusCode)
+    assert.Equal(t, "application/json; charset=utf-8", resp.ContentType)
+}

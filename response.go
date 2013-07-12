@@ -1,8 +1,10 @@
 package tango
 
 import (
+    "encoding/json"
     "fmt"
     "net/http"
+    "reflect"
 )
 
 type HttpResponse struct {
@@ -28,7 +30,22 @@ func NewHttpResponse(args ...interface{}) *HttpResponse {
         status = args[1].(int)
         fallthrough
     case 1:
-        content = args[0].(string)
+        arg := args[0]
+        val := reflect.ValueOf(arg)
+        k := val.Kind()
+
+        if k == reflect.Map || k == reflect.Array {
+            // If out object is a map or array, assume it's for Json output.
+            contentType = "application/json; charset=" + Settings.String("charset", "utf-8")
+
+            out, err := json.Marshal(arg)
+            if err != nil {
+                panic(fmt.Sprintf("NewJsonResponse could not convert map/array to json: %s", err))
+            }
+            content = string(out)
+        } else {
+            content = args[0].(string)
+        }
     case 0:
         break
     default:
