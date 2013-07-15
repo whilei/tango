@@ -1,6 +1,7 @@
 package tango
 
 import (
+    "io/ioutil"
     "log"
     "net/http"
     "os"
@@ -8,6 +9,10 @@ import (
     "strings"
 )
 
+// This logger will out put with the prefix "[Tango D] " when Debug mode is true.
+var LogDebug = log.New(ioutil.Discard, "", log.LstdFlags)
+
+// Normal usage loggers.
 var LogInfo = log.New(os.Stdout, "[Tango I] ", log.Ldate|log.Ltime)
 var LogError = log.New(os.Stderr, "[Tango E] ", log.Ldate|log.Ltime|log.Lshortfile)
 

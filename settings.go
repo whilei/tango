@@ -4,6 +4,8 @@ import (
     "bytes"
     "encoding/json"
     "fmt"
+    "io/ioutil"
+    "log"
     "os"
     "reflect"
     "syscall"
@@ -22,6 +24,14 @@ var Settings = NewDictObj()
 
 func NewDictObj() DictObj {
     return DictObj{data: make(map[string]interface{})}
+}
+
+func debugChanged() {
+    if Debug {
+        LogDebug = log.New(os.Stdout, "[Tango D] ", log.Ldate|log.Ltime)
+    } else {
+        LogDebug = log.New(ioutil.Discard, "", log.LstdFlags)
+    }
 }
 
 func (s *DictObj) LoadFromFile(filepath string) {
@@ -44,6 +54,7 @@ func (s *DictObj) LoadFromFile(filepath string) {
 
     // Check for the existance of the debug var, otherwise leave it as is.
     Debug = s.Bool("debug", Debug)
+    debugChanged()
 }
 
 func (s *DictObj) Set(key string, val interface{}) {
@@ -52,6 +63,7 @@ func (s *DictObj) Set(key string, val interface{}) {
     // Special case... only applies to our global Debug!
     if key == "debug" {
         Debug = s.Bool(key)
+        debugChanged()
     }
 }
 
@@ -73,6 +85,7 @@ func (s *DictObj) SetFromEnv(key, envKey string, args ...interface{}) {
 
     if key == "debug" {
         Debug = s.Bool(key)
+        debugChanged()
     }
 }
 
