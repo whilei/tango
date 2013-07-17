@@ -148,6 +148,17 @@ func TestDictObjString(t *testing.T) {
     })
 }
 
+func TestDictObjExists(t *testing.T) {
+    dictObj := NewDictObj()
+
+    dictObj.Set("a", "AAA")
+    dictObj.Set("b", "BBB")
+
+    assert.Equal(t, true, dictObj.Exists("a"))
+    assert.Equal(t, true, dictObj.Exists("b"))
+    assert.Equal(t, false, dictObj.Exists("c"))
+}
+
 func TestDictObjArray(t *testing.T) {
     tmp := make(map[string]interface{})
 

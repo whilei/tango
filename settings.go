@@ -171,6 +171,11 @@ func (s *DictObj) String(key string, args ...string) string {
     return result.(string)
 }
 
+func (s *DictObj) Exists(key string) bool {
+    _, present := s.data[key]
+    return present
+}
+
 func (s *DictObj) Array(key string, args ...[]interface{}) []interface{} {
     def := []interface{}(nil)
 
