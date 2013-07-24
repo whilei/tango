@@ -83,7 +83,7 @@ func (r *HttpRequest) GetArray(key string) ([]string, bool) {
 }
 
 func (r *HttpRequest) FormValue(key string) (string, bool) {
-    val, ok := r.Form[key]
+    val, ok := r.PostForm[key]
     if ok {
         return val[0], ok
     }
@@ -91,7 +91,7 @@ func (r *HttpRequest) FormValue(key string) (string, bool) {
 }
 
 func (r *HttpRequest) FormArray(key string) ([]string, bool) {
-    val, ok := r.Form[key]
+    val, ok := r.PostForm[key]
     return val, ok
 }
 

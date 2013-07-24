@@ -97,12 +97,12 @@ func TestRequestFragementValue(t *testing.T) {
 
 func TestRequestFormValue(t *testing.T) {
     in, _ := http.NewRequest("GET", "example.com", nil)
-    in.Form = make(url.Values)
-    in.Form.Add("one", "foo")
-    in.Form.Add("two", "bar")
-    in.Form.Add("three", "1")
-    in.Form.Add("three", "2")
-    in.Form.Add("three", "3")
+    in.PostForm = make(url.Values)
+    in.PostForm.Add("one", "foo")
+    in.PostForm.Add("two", "bar")
+    in.PostForm.Add("three", "1")
+    in.PostForm.Add("three", "2")
+    in.PostForm.Add("three", "3")
     req := NewHttpRequest(in, make(url.Values))
 
     v, ok := req.FormValue("one")
