@@ -11,7 +11,7 @@ func (h *IndexHandler) New() tango.HandlerInterface {
 }
 
 func (h *IndexHandler) Get(request *tango.HttpRequest) *tango.HttpResponse {
-    return tango.NewHttpResponse("Hello! No visit a <a href=\"/bad/\">bad page</a>.")
+    return tango.NewHttpResponse("Hello! Now visit a non existent <a href=\"/bad/\">page</a>.")
 }
 
 type NotFoundHandler struct{ tango.BaseHandler }
@@ -21,7 +21,7 @@ func (h *NotFoundHandler) New() tango.HandlerInterface {
 }
 
 func (h *NotFoundHandler) Get(request *tango.HttpRequest) *tango.HttpResponse {
-    return tango.NewHttpResponse("Sorry... you hit a page. Don't forget to set this handler as <strong>404</strong>!!", 404)
+    return tango.NewHttpResponse("Sorry... this page does not not exist. Don't forget to set this handler as <strong>404</strong>!!", 404)
 }
 
 func init() {

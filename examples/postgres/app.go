@@ -3,7 +3,7 @@ package main
 import (
     "fmt"
     "github.com/cojac/tango"
-    "github.com/cojac/tango-addons/postgres"
+    "github.com/cojac/tango/addons/postgres"
     "time"
 )
 
@@ -17,7 +17,7 @@ func (h *IndexHandler) New() tango.HandlerInterface {
 }
 
 func (h *IndexHandler) Get(request *tango.HttpRequest) *tango.HttpResponse {
-    r, err := h.Db.Query("SELECT clock_timestamp()")
+    r, err := h.Db.Query("SELECT clock_timestamp();")
     if err != nil {
         tango.LogError.Panicf("DB 1 error:", err)
     }

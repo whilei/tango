@@ -2,7 +2,7 @@ package main
 
 import (
     "github.com/cojac/tango"
-    "github.com/cojac/tango-addons/runtime"
+    "github.com/cojac/tango/addons/runtime"
 )
 
 type IndexHandler struct{ tango.BaseHandler }
