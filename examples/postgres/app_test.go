@@ -17,5 +17,5 @@ func TestResponse(t *testing.T) {
     resp := client.Get("/")
 
     assert.Equal(t, 200, resp.StatusCode)
-    assert.Contains(t, "Postgres says the timestamp is:", resp.Content)
+    assert.Contains(t, "Postgres clock_timestamp is:", resp.Content)
 }

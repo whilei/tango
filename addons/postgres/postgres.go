@@ -45,6 +45,7 @@ func InitPostgresConnection() (interface{}, error) {
     }
 
     db, err := sql.Open("postgres", conf)
+    db.SetMaxIdleConns(1)
 
     return db, err
 }

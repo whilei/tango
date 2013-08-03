@@ -17,23 +17,21 @@ func (h *IndexHandler) New() tango.HandlerInterface {
 }
 
 func (h *IndexHandler) Get(request *tango.HttpRequest) *tango.HttpResponse {
-    r, err := h.Db.Query("SELECT clock_timestamp();")
+    query := "SELECT clock_timestamp();"
+
+    stmt, err := h.Db.Prepare(query)
     if err != nil {
         tango.LogError.Panicf("DB 1 error:", err)
     }
-    defer r.Close()
+    defer stmt.Close()
 
-    if !r.Next() {
+    var datetime time.Time
+    err = stmt.QueryRow().Scan(&datetime)
+    if err != nil {
         tango.LogError.Panicf("DB 2 error:", err)
     }
 
-    var datetime time.Time
-    err = r.Scan(&datetime)
-    if err != nil {
-        tango.LogError.Panicf("DB 3 error:", err)
-    }
-
-    return tango.NewHttpResponse(fmt.Sprintf("Postgres says the timestamp is: %s", datetime))
+    return tango.NewHttpResponse(fmt.Sprintf("Postgres clock_timestamp is: %s", datetime))
 }
 
 func init() {
@@ -41,7 +39,7 @@ func init() {
     tango.Settings.Set("serve_address", ":8000")
 
     // DB Settings
-    tango.Settings.Set("db_pool_size", 3)
+    //tango.Settings.Set("db_pool_size", 8) // cores*2
     tango.Settings.Set("db_name", "postgres")
     tango.Settings.Set("db_user", "postgres")
     tango.Settings.Set("db_password", "")
