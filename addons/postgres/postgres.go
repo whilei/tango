@@ -83,3 +83,12 @@ func (p *ConnectionPoolWrapper) GetConn() *sql.DB {
 func (p *ConnectionPoolWrapper) ReleaseConn(conn *sql.DB) {
     p.conn <- conn
 }
+
+func (p *ConnectionPoolWrapper) ShutdownConns() {
+    for x := 0; x < p.size; x++ {
+        tmp := <-p.conn
+        tmp.Close()
+    }
+
+    close(p.conn)
+}
