@@ -21,14 +21,14 @@ func (m *PostgresMixin) InitMixin() {
 }
 
 func (m *PostgresMixin) PreparePostgresMixin() {
-    m.Db = DbPool.GetConn().(*sql.DB)
+    m.Db = DbPool.GetConn()
 }
 
 func (m *PostgresMixin) FinishPostgresMixin() {
     DbPool.ReleaseConn(m.Db)
 }
 
-func InitPostgresConnection() (interface{}, error) {
+func InitPostgresConnection() (*sql.DB, error) {
     tango.LogDebug.Println("Creating Postgres Connection")
 
     // Used if we supply a full string in our conf.
@@ -54,16 +54,16 @@ func InitPostgresConnection() (interface{}, error) {
 // Setup the connection pool.
 var DbPool = &ConnectionPoolWrapper{}
 
-type InitFunction func() (interface{}, error)
+type InitFunction func() (*sql.DB, error)
 
 type ConnectionPoolWrapper struct {
     size int
-    conn chan interface{}
+    conn chan *sql.DB
 }
 
 func (p *ConnectionPoolWrapper) InitPool(size int, initfn InitFunction) error {
     // Create a buffered channel allowing size senders
-    p.conn = make(chan interface{}, size)
+    p.conn = make(chan *sql.DB, size)
     for x := 0; x < size; x++ {
         conn, err := initfn()
         if err != nil {
@@ -76,10 +76,10 @@ func (p *ConnectionPoolWrapper) InitPool(size int, initfn InitFunction) error {
     return nil
 }
 
-func (p *ConnectionPoolWrapper) GetConn() interface{} {
+func (p *ConnectionPoolWrapper) GetConn() *sql.DB {
     return <-p.conn
 }
 
-func (p *ConnectionPoolWrapper) ReleaseConn(conn interface{}) {
+func (p *ConnectionPoolWrapper) ReleaseConn(conn *sql.DB) {
     p.conn <- conn
 }
