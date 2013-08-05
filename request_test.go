@@ -85,6 +85,26 @@ func TestRequestGetValue(t *testing.T) {
     assert.Equal(t, []string(nil), varray)
 }
 
+func TestRequestGetValueTypes(t *testing.T) {
+    in, _ := http.NewRequest("GET", "example.com?one=foo&two=222&three=11&four=2.0", nil)
+    req := NewHttpRequest(in, make(url.Values))
+
+    vs := req.GetString("one")
+    assert.Equal(t, "foo", vs)
+
+    vs = req.GetString("two")
+    assert.Equal(t, "222", vs)
+
+    vi := req.GetInt("three")
+    assert.Equal(t, int64(11), vi)
+
+    vf := req.GetFloat("four")
+    assert.Equal(t, 2.0, vf)
+
+    vs = req.GetString("five", "hello")
+    assert.Equal(t, "hello", vs)
+}
+
 func TestRequestFragementValue(t *testing.T) {
     in, _ := http.NewRequest("GET", "example.com?foo=bar#batman", nil)
     req := NewHttpRequest(in, make(url.Values))
@@ -128,6 +148,46 @@ func TestRequestFormValue(t *testing.T) {
     varray, ok = req.FormArray("barfoo")
     assert.Equal(t, false, ok)
     assert.Equal(t, []string(nil), varray)
+}
+
+func TestRequestFormValueTypes(t *testing.T) {
+    in, _ := http.NewRequest("GET", "example.com", nil)
+    in.PostForm = make(url.Values)
+    in.PostForm.Add("one", "foo")
+    in.PostForm.Add("two", "222")
+    in.PostForm.Add("three", "11")
+    in.PostForm.Add("four", "2.0")
+    req := NewHttpRequest(in, make(url.Values))
+
+    vs := req.FormString("one")
+    assert.Equal(t, "foo", vs)
+
+    vs = req.FormString("two")
+    assert.Equal(t, "222", vs)
+
+    vi := req.FormInt("three")
+    assert.Equal(t, int64(11), vi)
+
+    vf := req.FormFloat("four")
+    assert.Equal(t, 2.0, vf)
+
+    vs = req.FormString("five", "hello")
+    assert.Equal(t, "hello", vs)
+
+    vs = req.FormString("six")
+    assert.Equal(t, "", vs)
+
+    vi = req.FormInt("seven")
+    assert.Equal(t, int64(0), vi)
+
+    vf = req.FormFloat("eight")
+    assert.Equal(t, 0.0, vf)
+
+    vi = req.FormInt("nine", 22)
+    assert.Equal(t, int64(22), vi)
+
+    vf = req.FormFloat("ten", 10.10)
+    assert.Equal(t, 10.10, vf)
 }
 
 func TestRequestPathValue(t *testing.T) {
