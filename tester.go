@@ -72,6 +72,7 @@ func (t *testClient) Options(path string, input ...interface{}) *HttpTestRespons
     return t.runMethod("OPTIONS", path, input)
 }
 
+// Helper for above convenience methods.
 func (t *testClient) runMethod(method, path string, input []interface{}) *HttpTestResponse {
     var body []string
     data := make(map[string]interface{})
@@ -95,14 +96,18 @@ func (t *testClient) runMethod(method, path string, input []interface{}) *HttpTe
 
     req, _ := http.NewRequest(method, path, bodyReader)
     if len(data) != 0 {
-        req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
         uV := make(url.Values)
         for k, v := range data {
-            uV.Add(k, fmt.Sprintf("%s", v))
+            uV.Add(k, fmt.Sprintf("%v", v))
         }
         req.PostForm = uV
+    } else if len(data) == 0 && len(body) >= 1 {
+        req.PostForm, _ = url.ParseQuery(body[0])
     }
-    resp := Mux.ServeTestResponse(req)
+    return t.Request(req)
+}
 
+func (t *testClient) Request(req *http.Request) *HttpTestResponse {
+    resp := Mux.ServeTestResponse(req)
     return &HttpTestResponse{resp}
 }
