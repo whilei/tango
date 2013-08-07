@@ -85,10 +85,16 @@ func (p *ConnectionPoolWrapper) ReleaseConn(conn *sql.DB) {
 }
 
 func (p *ConnectionPoolWrapper) ShutdownConns() {
+    // Prevent method for panicing when no connections were created.
+    if p.size == 0 {
+        return
+    }
+
     for x := 0; x < p.size; x++ {
         tmp := <-p.conn
         tmp.Close()
     }
 
+    p.size = 0
     close(p.conn)
 }
