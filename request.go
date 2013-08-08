@@ -18,6 +18,11 @@ type HttpRequest struct {
 func NewHttpRequest(orig *http.Request, params url.Values) *HttpRequest {
     r := &HttpRequest{*orig, "", params, make(map[string]interface{})}
 
+    err := r.ParseForm()
+    if err != nil {
+        LogError.Printf("Error parsing form for url: %s", orig.URL.RequestURI())
+    }
+
     if r.Body != nil {
         strBody, err := ioutil.ReadAll(r.Body)
         if err != nil {
