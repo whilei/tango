@@ -119,7 +119,6 @@ func (ph *patHandler) processRequest(r *http.Request, params url.Values) *HttpRe
                 finished = true
                 response = prepResp
             }
-            defer handler.Finish(request, response)
         }
 
         // And again, the prepare method has the ability to halt the response, so check again.
@@ -152,6 +151,9 @@ func (ph *patHandler) processRequest(r *http.Request, params url.Values) *HttpRe
         if response == nil {
             panic("Response cannot be nil.")
         }
+
+        // Always call finish before middleware.
+        handler.Finish(request, response)
 
         // Always run postprocess for middlewares.
         runMiddlewarePostprocess(request, response)
