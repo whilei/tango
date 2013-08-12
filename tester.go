@@ -39,11 +39,13 @@ type testClient struct {
     argTesting *testing.T
 
     followRedirects bool
+    Headers         map[string]interface{}
 }
 
 func NewTestClient(t *testing.T) *testClient {
     tc := &testClient{}
     tc.followRedirects = true
+    tc.Headers = make(map[string]interface{})
 
     return tc
 }
@@ -104,6 +106,13 @@ func (t *testClient) runMethod(method, path string, input []interface{}) *HttpTe
     } else if len(data) == 0 && len(body) >= 1 {
         req.PostForm, _ = url.ParseQuery(body[0])
     }
+
+    if len(t.Headers) != 0 {
+        for k, v := range t.Headers {
+            req.Header.Add(k, fmt.Sprintf("%v", v))
+        }
+    }
+
     return t.Request(req)
 }
 
