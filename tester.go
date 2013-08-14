@@ -82,7 +82,7 @@ func (t *testClient) runMethod(method, path string, input []interface{}) *HttpTe
     for _, arg := range input {
         k := reflect.ValueOf(arg).Kind()
         if k == reflect.Map {
-            for kArg, vArg := range arg.(map[string]string) {
+            for kArg, vArg := range arg.(map[string]interface{}) {
                 data[kArg] = vArg
             }
         } else {
