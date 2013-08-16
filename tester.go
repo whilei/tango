@@ -25,14 +25,24 @@ func (h *HttpTestResponse) JsonMap() map[string]interface{} {
     return v
 }
 
-func (h *HttpTestResponse) JsonArray() []interface{} {
+func (h *HttpTestResponse) JsonSlice() []interface{} {
+    var v []interface{}
+    err := json.Unmarshal([]byte(h.Content), &v)
+    if err != nil {
+        return nil
+    }
+
+    return v
+}
+
+func (h *HttpTestResponse) Json() interface{} {
     var v interface{}
     err := json.Unmarshal([]byte(h.Content), &v)
     if err != nil {
         return nil
     }
 
-    return v.([]interface{})
+    return v
 }
 
 type testClient struct {

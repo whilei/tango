@@ -93,9 +93,11 @@ func (ph *patHandler) processRequest(r *http.Request, params url.Values) *HttpRe
     func() {
         // Any panic errors will be caught and passed over to our ErrorHandler.
         defer func() {
-            if rec := recover(); rec != nil {
-                LogError.Printf("Panic Recovered: %s", rec)
-                response = handler.ErrorHandler(fmt.Sprintf("%q", rec))
+            if Debug == false {
+                if rec := recover(); rec != nil {
+                    LogError.Printf("Panic Recovered: %s", rec)
+                    response = handler.ErrorHandler(fmt.Sprintf("%q", rec))
+                }
             }
         }()
 

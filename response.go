@@ -34,8 +34,8 @@ func NewHttpResponse(args ...interface{}) *HttpResponse {
         val := reflect.ValueOf(arg)
         k := val.Kind()
 
-        if k == reflect.Map || k == reflect.Array {
-            // If out object is a map or array, assume it's for Json output.
+        if k == reflect.Map || k == reflect.Slice || k == reflect.Array {
+            // If out object is a map || slice || array, assume it's for Json output.
             contentType = "application/json; charset=" + Settings.String("charset", "utf-8")
 
             out, err := json.Marshal(arg)

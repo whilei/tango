@@ -59,6 +59,14 @@ func TestResponseNewArray(t *testing.T) {
     assert.Equal(t, "application/json; charset=utf-8", resp.ContentType)
 }
 
+func TestResponseNewSlice(t *testing.T) {
+    resp := NewHttpResponse([]string{"hellowww", "aaaaa"})
+
+    assert.Equal(t, `["hellowww","aaaaa"]`, resp.Content)
+    assert.Equal(t, 200, resp.StatusCode)
+    assert.Equal(t, "application/json; charset=utf-8", resp.ContentType)
+}
+
 func TestResponseNewMap(t *testing.T) {
     v := map[string]interface{}{"k": "value"}
     resp := NewHttpResponse(v)
