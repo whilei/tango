@@ -1,9 +1,11 @@
 package tango
 
 import (
+    "fmt"
     "io/ioutil"
     "log"
     "net/http"
+    "net/smtp"
     "os"
     "strconv"
     "strings"
@@ -16,7 +18,7 @@ var LogDebug = log.New(ioutil.Discard, "", log.LstdFlags)
 var LogInfo = log.New(os.Stdout, "[Tango I] ", log.Ldate|log.Ltime)
 var LogError = log.New(os.Stderr, "[Tango E] ", log.Ldate|log.Ltime|log.Lshortfile)
 
-var Version = "0.0.1"
+var Version = "0.0.2"
 
 func VersionMap() [3]int {
     var out [3]int
@@ -26,6 +28,25 @@ func VersionMap() [3]int {
         out[k] = int(i)
     }
     return out
+}
+
+func SendMail(subject, message, to_address string) error {
+    return SendMassMail(subject, message, []string{to_address})
+}
+
+func SendMailFrom(subject, message, to_address, from_address string) error {
+    return SendMassMailFrom(subject, message, from_address, []string{to_address})
+}
+
+func SendMassMail(subject, message string, to_addresses []string) error {
+    from_address := Settings.String("from_address", "tango_server@example.com")
+    return SendMassMailFrom(subject, message, from_address, to_addresses)
+}
+
+func SendMassMailFrom(subject, message, from_address string, to_addresses []string) error {
+    mail_server := Settings.String("mail_server", "localhost:25")
+    body := fmt.Sprintf("Subject: %s\n%s", strings.TrimSpace(subject), message)
+    return smtp.SendMail(mail_server, nil, from_address, to_addresses, []byte(body))
 }
 
 func ListenAndServe() {
