@@ -1,8 +1,8 @@
 package main
 
 import (
-    "github.com/cojac/assert"
     "github.com/cojac/tango"
+    "strings"
     "testing"
 )
 
@@ -16,6 +16,13 @@ func TestResponse(t *testing.T) {
 
     resp := client.Get("/")
 
-    assert.Equal(t, 200, resp.StatusCode)
-    assert.Contains(t, "Postgres clock_timestamp is:", resp.Content)
+    if resp.StatusCode != 200 {
+        t.Errorf("resp.StatusCode(%v) != 200", resp.StatusCode)
+        t.FailNow()
+    }
+
+    if !strings.Contains(resp.Content, "Postgres clock_timestamp is") {
+        t.Errorf("resp.Content('%v') does not contain 'Postgres clock_timestamp is'", resp.Content)
+        t.FailNow()
+    }
 }

@@ -4,6 +4,7 @@ import (
     "github.com/cojac/tango"
 )
 
+// Index Page
 type IndexHandler struct{ tango.BaseHandler }
 
 func (h *IndexHandler) New() tango.HandlerInterface {
@@ -11,9 +12,10 @@ func (h *IndexHandler) New() tango.HandlerInterface {
 }
 
 func (h *IndexHandler) Get(request *tango.HttpRequest) *tango.HttpResponse {
-    return tango.NewHttpResponse("Hello! Now visit a non existent <a href=\"/bad/\">page</a>.")
+    return tango.NewHttpResponse("Hello! Now visit a non existent <a href=\"/404/\">page</a>.")
 }
 
+// Custom 404 Page
 type NotFoundHandler struct{ tango.BaseHandler }
 
 func (h *NotFoundHandler) New() tango.HandlerInterface {

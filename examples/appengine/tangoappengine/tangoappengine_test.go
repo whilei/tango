@@ -1,7 +1,6 @@
 package tangoappengine
 
 import (
-    "github.com/cojac/assert"
     "github.com/cojac/tango"
     "testing"
 )
@@ -11,6 +10,13 @@ func TestResponse(t *testing.T) {
 
     resp := client.Get("/")
 
-    assert.Equal(t, 200, resp.StatusCode)
-    assert.Equal(t, "Hello, appengine.", resp.Content)
+    if resp.StatusCode != 200 {
+        t.Errorf("resp.StatusCode(%v) != 200", resp.StatusCode)
+        t.FailNow()
+    }
+
+    if resp.Content != "Hello, appengine." {
+        t.Errorf("resp.Content('%v') != 'Hello, appengine.'", resp.Content)
+        t.FailNow()
+    }
 }
