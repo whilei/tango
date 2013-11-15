@@ -47,25 +47,36 @@ func (h *AppendSlashBaseHandler) Get(request *HttpRequest) *HttpResponse {
 
 func TestHandlerAppendSlash(t *testing.T) {
     oldAppendSetting := Settings.Bool("append_slash", false)
+    oldAppendRedirectSetting := Settings.Bool("append_slash_should_redirect", true)
 
     Settings.Set("append_slash", false)
-    Pattern("/hello/", &AppendSlashBaseHandler{})
-    r, _ := http.NewRequest("GET", "/hello", nil)
+    Pattern("/hello", &AppendSlashBaseHandler{})
+    r, _ := http.NewRequest("GET", "/hello/", nil)
     rec := httptest.NewRecorder()
     Mux.ServeHTTP(rec, r)
     assert.Equal(t, http.StatusNotFound, rec.Code)
     Mux = &PatternServeMux{}
 
     Settings.Set("append_slash", true)
-    Pattern("/hello/", &AppendSlashBaseHandler{})
-    r, _ = http.NewRequest("GET", "/hello", nil)
+    Pattern("/hello", &AppendSlashBaseHandler{})
+    r, _ = http.NewRequest("GET", "/hello/", nil)
     rec = httptest.NewRecorder()
     Mux.ServeHTTP(rec, r)
     assert.Equal(t, http.StatusMovedPermanently, rec.Code)
     Mux = &PatternServeMux{}
 
+    Settings.Set("append_slash", true)
+    Settings.Set("append_slash_should_redirect", false)
+    Pattern("/hello", &AppendSlashBaseHandler{})
+    r, _ = http.NewRequest("GET", "/hello/", nil)
+    rec = httptest.NewRecorder()
+    Mux.ServeHTTP(rec, r)
+    assert.Equal(t, http.StatusOK, rec.Code)
+    Mux = &PatternServeMux{}
+
     // Set it back to what it was.
     Settings.Set("append_slash", oldAppendSetting)
+    Settings.Set("append_slash_should_redirect", oldAppendRedirectSetting)
 }
 
 //---

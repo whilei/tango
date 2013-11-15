@@ -26,8 +26,14 @@ func (p *PatternServeMux) ServeHTTP(w http.ResponseWriter, r *http.Request) {
         if params, ok := ph.try(r.URL.Path); ok {
             if ph.isSlashRedirect {
                 handler := ph.New()
-                resp := handler.PermanentRedirect(NewHttpRequest(r, params), buildUrlWithSlash(r))
-                writePatternResponse(resp, w)
+                response := handler.PermanentRedirect(NewHttpRequest(r, params), buildUrlWithOutSlash(r))
+                writePatternResponse(response, w)
+                LogInfo.Printf("%d %s %s (%s) -",
+                    response.StatusCode,
+                    strings.ToUpper(r.Method),
+                    r.RequestURI,
+                    r.RemoteAddr,
+                )
                 return
             }
 
@@ -44,7 +50,7 @@ func (p *PatternServeMux) ServeTestResponse(r *http.Request) *HttpResponse {
         if params, ok := ph.try(r.URL.Path); ok {
             if ph.isSlashRedirect {
                 handler := ph.New()
-                return handler.PermanentRedirect(NewHttpRequest(r, params), buildUrlWithSlash(r))
+                return handler.PermanentRedirect(NewHttpRequest(r, params), buildUrlWithOutSlash(r))
             }
 
             return ph.processRequest(r, params)
@@ -56,17 +62,23 @@ func (p *PatternServeMux) ServeTestResponse(r *http.Request) *HttpResponse {
 
 func Pattern(pat string, h HandlerInterface) {
     Mux.handlers = append(Mux.handlers, &patHandler{pat, h, false})
-
     if Settings.Bool("append_slash", false) {
+        // Allows urls like "/api/health" to be called like "/api/health/".
         n := len(pat)
-        if n > 0 && pat[n-1] == '/' {
-            Mux.handlers = append(Mux.handlers, &patHandler{pat[:n-1], h, true})
+        if n > 0 && pat[n-1] != '/' {
+            Mux.handlers = append(Mux.handlers, &patHandler{pat + "/", h, Settings.Bool("append_slash_should_redirect", true)})
         }
     }
 }
 
-func buildUrlWithSlash(r *http.Request) string {
-    result := r.URL.Path + "/"
+func buildUrlWithOutSlash(r *http.Request) string {
+    result := r.URL.Path
+
+    // Stripe slash.
+    n := len(r.URL.Path)
+    if n > 0 && r.URL.Path[n-1] == '/' {
+        result = r.URL.Path[:n-1]
+    }
 
     if len(r.URL.Query()) != 0 {
         result = result + "?" + r.URL.RawQuery
