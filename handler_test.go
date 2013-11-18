@@ -62,16 +62,16 @@ func TestHandlerAppendSlash(t *testing.T) {
     r, _ = http.NewRequest("GET", "/hello/", nil)
     rec = httptest.NewRecorder()
     Mux.ServeHTTP(rec, r)
-    assert.Equal(t, http.StatusMovedPermanently, rec.Code)
+    assert.Equal(t, http.StatusOK, rec.Code)
     Mux = &PatternServeMux{}
 
     Settings.Set("append_slash", true)
-    Settings.Set("append_slash_should_redirect", false)
+    Settings.Set("append_slash_should_redirect", true)
     Pattern("/hello", &AppendSlashBaseHandler{})
     r, _ = http.NewRequest("GET", "/hello/", nil)
     rec = httptest.NewRecorder()
     Mux.ServeHTTP(rec, r)
-    assert.Equal(t, http.StatusOK, rec.Code)
+    assert.Equal(t, http.StatusMovedPermanently, rec.Code)
     Mux = &PatternServeMux{}
 
     // Set it back to what it was.
