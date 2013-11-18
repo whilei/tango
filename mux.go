@@ -62,11 +62,11 @@ func (p *PatternServeMux) ServeTestResponse(r *http.Request) *HttpResponse {
 
 func Pattern(pat string, h HandlerInterface) {
     Mux.handlers = append(Mux.handlers, &patHandler{pat, h, false})
-    if Settings.Bool("append_slash", false) {
+    if Settings.Bool("append_slash", true) {
         // Allows urls like "/api/health" to be called like "/api/health/".
         n := len(pat)
         if n > 0 && pat[n-1] != '/' {
-            Mux.handlers = append(Mux.handlers, &patHandler{pat + "/", h, Settings.Bool("append_slash_should_redirect", true)})
+            Mux.handlers = append(Mux.handlers, &patHandler{pat + "/", h, Settings.Bool("append_slash_should_redirect", false)})
         }
     }
 }
