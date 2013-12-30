@@ -36,27 +36,8 @@ func (r *HttpRequest) IsSecure() bool {
         return true
     }
 
-    if strings.HasPrefix(r.Proto, "HTTPS") {
-        return true
-    }
-
     if strings.EqualFold(r.Header.Get("X-Forwarded-Proto"), "https") {
         return true
-    }
-
-    return false
-}
-
-func (r *HttpRequest) IsAjax() bool {
-    xhr, ok := r.Header["X-Requested-With"]
-    if !ok {
-        return false
-    }
-
-    for _, v := range xhr {
-        if strings.EqualFold(v, "xmlhttprequest") {
-            return true
-        }
     }
 
     return false

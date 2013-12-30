@@ -30,30 +30,9 @@ func TestRequestIsSecure(t *testing.T) {
     assert.Equal(t, true, req.IsSecure())
 
     in, _ = http.NewRequest("GET", "example.com", nil)
-    in.Proto = "HTTPS/1.1"
-    req = NewHttpRequest(in, make(url.Values))
-    assert.Equal(t, true, req.IsSecure())
-
-    in, _ = http.NewRequest("GET", "example.com", nil)
     in.Header.Add("X-Forwarded-Proto", "httPS")
     req = NewHttpRequest(in, make(url.Values))
     assert.Equal(t, true, req.IsSecure())
-}
-
-func TestRequestIsAjax(t *testing.T) {
-    in, _ := http.NewRequest("GET", "example.com", nil)
-    req := NewHttpRequest(in, make(url.Values))
-    assert.Equal(t, false, req.IsAjax())
-
-    in, _ = http.NewRequest("GET", "example.com", nil)
-    in.Header.Add("X-Requested-With", "xmlsucks")
-    req = NewHttpRequest(in, make(url.Values))
-    assert.Equal(t, false, req.IsAjax())
-
-    in, _ = http.NewRequest("GET", "example.com", nil)
-    in.Header.Add("X-Requested-With", "xmlhttprequest")
-    req = NewHttpRequest(in, make(url.Values))
-    assert.Equal(t, true, req.IsAjax())
 }
 
 func TestRequestGetValue(t *testing.T) {
