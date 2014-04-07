@@ -107,7 +107,10 @@ func (ph *patHandler) processRequest(r *http.Request, params url.Values) *HttpRe
         defer func() {
             if Debug == false {
                 if rec := recover(); rec != nil {
-                    LogError.Printf("Panic Recovered: %s", rec)
+                    LogError.Printf("Panic Recovered: %v", rec)
+                    LogError.Printf("  Header: %v", r.Header)
+                    LogError.Printf("  Form: %v", r.Form)
+                    LogError.Printf("  PostForm: %v", r.PostForm)
                     response = handler.ErrorHandler(fmt.Sprintf("%q", rec))
                 }
             }
