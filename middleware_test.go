@@ -1,157 +1,158 @@
 package tango
 
 import (
-    "github.com/cojac/assert"
-    "io/ioutil"
-    "log"
-    "net/http"
-    "net/http/httptest"
-    "testing"
+	"io/ioutil"
+	"log"
+	"net/http"
+	"net/http/httptest"
+	"testing"
+
+	"github.com/unrolled/assert"
 )
 
 func init() {
-    // Disable logging when running the tests.
-    LogInfo = log.New(ioutil.Discard, "", log.LstdFlags)
-    LogError = log.New(ioutil.Discard, "", log.LstdFlags)
+	// Disable logging when running the tests.
+	LogInfo = log.New(ioutil.Discard, "", log.LstdFlags)
+	LogError = log.New(ioutil.Discard, "", log.LstdFlags)
 }
 
 //---
 type MiddleHandler struct{ BaseHandler }
 
 func (h *MiddleHandler) New() HandlerInterface {
-    return &MiddleHandler{}
+	return &MiddleHandler{}
 }
 func (h *MiddleHandler) Get(request *HttpRequest) *HttpResponse {
-    return NewHttpResponse("foo")
+	return NewHttpResponse("foo")
 }
 
 //---
 type Firstware struct{ BaseMiddleware }
 
 func (m *Firstware) ProcessRequest(request *HttpRequest) *HttpResponse {
-    request.Header.Set("X-pre", "superman")
+	request.Header.Set("X-pre", "superman")
 
-    return nil
+	return nil
 }
 
 func (m *Firstware) ProcessResponse(request *HttpRequest, response *HttpResponse) {
-    response.Header.Set("X-post", request.Header.Get("X-pre"))
-    response.Content = "bar"
+	response.Header.Set("X-post", request.Header.Get("X-pre"))
+	response.Content = "bar"
 }
 
 //---
 type Secondware struct{ BaseMiddleware }
 
 func (m *Secondware) ProcessRequest(request *HttpRequest) *HttpResponse {
-    request.Header.Set("X-pre", "batman")
+	request.Header.Set("X-pre", "batman")
 
-    return nil
+	return nil
 }
 
 //---
 type Thirdware struct{ BaseMiddleware }
 
 func (m *Thirdware) ProcessResponse(request *HttpRequest, response *HttpResponse) {
-    response.Content = "foobar"
+	response.Content = "foobar"
 }
 
 //---
 type Finishware struct{ BaseMiddleware }
 
 func (m *Finishware) ProcessRequest(request *HttpRequest) *HttpResponse {
-    request.Header.Set("X-pre", "FIRST")
+	request.Header.Set("X-pre", "FIRST")
 
-    return NewHttpResponse("Ending request early.")
+	return NewHttpResponse("Ending request early.")
 }
 
 //---
 func TestEarlyResponseMiddleware(t *testing.T) {
-    defer func() { Mux = &PatternServeMux{} }()
-    defer func() { middlewares = []MiddlewareInterface{} }()
-    Pattern("/", &MiddleHandler{})
-    Middleware(&Finishware{})
+	defer func() { Mux = &PatternServeMux{} }()
+	defer func() { middlewares = []MiddlewareInterface{} }()
+	Pattern("/", &MiddleHandler{})
+	Middleware(&Finishware{})
 
-    r, _ := http.NewRequest("GET", "/", nil)
-    rec := httptest.NewRecorder()
-    Mux.ServeHTTP(rec, r)
-    assert.Equal(t, http.StatusOK, rec.Code)
-    assert.Equal(t, "Ending request early.", rec.Body.String())
+	r, _ := http.NewRequest("GET", "/", nil)
+	rec := httptest.NewRecorder()
+	Mux.ServeHTTP(rec, r)
+	assert.Equal(t, http.StatusOK, rec.Code)
+	assert.Equal(t, "Ending request early.", rec.Body.String())
 }
 
 func TestBasicMiddleware(t *testing.T) {
-    defer func() { Mux = &PatternServeMux{} }()
-    defer func() { middlewares = []MiddlewareInterface{} }()
-    Pattern("/", &MiddleHandler{})
-    Middleware(&Firstware{})
+	defer func() { Mux = &PatternServeMux{} }()
+	defer func() { middlewares = []MiddlewareInterface{} }()
+	Pattern("/", &MiddleHandler{})
+	Middleware(&Firstware{})
 
-    r, _ := http.NewRequest("GET", "/", nil)
-    rec := httptest.NewRecorder()
-    Mux.ServeHTTP(rec, r)
-    assert.Equal(t, http.StatusOK, rec.Code)
-    assert.Equal(t, "bar", rec.Body.String())
-    assert.Equal(t, "superman", rec.Header().Get("X-post"))
+	r, _ := http.NewRequest("GET", "/", nil)
+	rec := httptest.NewRecorder()
+	Mux.ServeHTTP(rec, r)
+	assert.Equal(t, http.StatusOK, rec.Code)
+	assert.Equal(t, "bar", rec.Body.String())
+	assert.Equal(t, "superman", rec.Header().Get("X-post"))
 }
 
 func TestFinishMiddleware(t *testing.T) {
-    defer func() { Mux = &PatternServeMux{} }()
-    defer func() { middlewares = []MiddlewareInterface{} }()
-    Pattern("/", &MiddleHandler{})
+	defer func() { Mux = &PatternServeMux{} }()
+	defer func() { middlewares = []MiddlewareInterface{} }()
+	Pattern("/", &MiddleHandler{})
 
-    // Finish should not allow Firstware to be called.
-    Middleware(&Finishware{})
-    Middleware(&Firstware{})
+	// Finish should not allow Firstware to be called.
+	Middleware(&Finishware{})
+	Middleware(&Firstware{})
 
-    r, _ := http.NewRequest("GET", "/", nil)
-    rec := httptest.NewRecorder()
-    Mux.ServeHTTP(rec, r)
-    assert.Equal(t, http.StatusOK, rec.Code)
-    assert.Equal(t, "bar", rec.Body.String())
-    assert.Equal(t, "FIRST", rec.Header().Get("X-post"))
+	r, _ := http.NewRequest("GET", "/", nil)
+	rec := httptest.NewRecorder()
+	Mux.ServeHTTP(rec, r)
+	assert.Equal(t, http.StatusOK, rec.Code)
+	assert.Equal(t, "bar", rec.Body.String())
+	assert.Equal(t, "FIRST", rec.Header().Get("X-post"))
 
 }
 
 func TestOrderOfMiddleware(t *testing.T) {
-    defer func() { Mux = &PatternServeMux{} }()
-    defer func() { middlewares = []MiddlewareInterface{} }()
-    Pattern("/", &MiddleHandler{})
-    Middleware(&Firstware{})
-    Middleware(&Secondware{})
+	defer func() { Mux = &PatternServeMux{} }()
+	defer func() { middlewares = []MiddlewareInterface{} }()
+	Pattern("/", &MiddleHandler{})
+	Middleware(&Firstware{})
+	Middleware(&Secondware{})
 
-    r, _ := http.NewRequest("GET", "/", nil)
-    rec := httptest.NewRecorder()
-    Mux.ServeHTTP(rec, r)
-    assert.Equal(t, http.StatusOK, rec.Code)
-    assert.Equal(t, "bar", rec.Body.String())
-    assert.Equal(t, "batman", rec.Header().Get("X-post"))
+	r, _ := http.NewRequest("GET", "/", nil)
+	rec := httptest.NewRecorder()
+	Mux.ServeHTTP(rec, r)
+	assert.Equal(t, http.StatusOK, rec.Code)
+	assert.Equal(t, "bar", rec.Body.String())
+	assert.Equal(t, "batman", rec.Header().Get("X-post"))
 }
 
 func TestOrderOfMiddlewareReversed(t *testing.T) {
-    defer func() { Mux = &PatternServeMux{} }()
-    defer func() { middlewares = []MiddlewareInterface{} }()
-    Pattern("/", &MiddleHandler{})
-    Middleware(&Secondware{})
-    Middleware(&Firstware{})
+	defer func() { Mux = &PatternServeMux{} }()
+	defer func() { middlewares = []MiddlewareInterface{} }()
+	Pattern("/", &MiddleHandler{})
+	Middleware(&Secondware{})
+	Middleware(&Firstware{})
 
-    r, _ := http.NewRequest("GET", "/", nil)
-    rec := httptest.NewRecorder()
-    Mux.ServeHTTP(rec, r)
-    assert.Equal(t, http.StatusOK, rec.Code)
-    assert.Equal(t, "bar", rec.Body.String())
-    assert.Equal(t, "superman", rec.Header().Get("X-post"))
+	r, _ := http.NewRequest("GET", "/", nil)
+	rec := httptest.NewRecorder()
+	Mux.ServeHTTP(rec, r)
+	assert.Equal(t, http.StatusOK, rec.Code)
+	assert.Equal(t, "bar", rec.Body.String())
+	assert.Equal(t, "superman", rec.Header().Get("X-post"))
 }
 
 func TestMultiMiddleware(t *testing.T) {
-    defer func() { Mux = &PatternServeMux{} }()
-    defer func() { middlewares = []MiddlewareInterface{} }()
-    Pattern("/", &MiddleHandler{})
-    Middleware(&Thirdware{})
-    Middleware(&Firstware{})
-    Middleware(&Secondware{})
+	defer func() { Mux = &PatternServeMux{} }()
+	defer func() { middlewares = []MiddlewareInterface{} }()
+	Pattern("/", &MiddleHandler{})
+	Middleware(&Thirdware{})
+	Middleware(&Firstware{})
+	Middleware(&Secondware{})
 
-    r, _ := http.NewRequest("GET", "/", nil)
-    rec := httptest.NewRecorder()
-    Mux.ServeHTTP(rec, r)
-    assert.Equal(t, http.StatusOK, rec.Code)
-    assert.Equal(t, "foobar", rec.Body.String())
-    assert.Equal(t, "batman", rec.Header().Get("X-post"))
+	r, _ := http.NewRequest("GET", "/", nil)
+	rec := httptest.NewRecorder()
+	Mux.ServeHTTP(rec, r)
+	assert.Equal(t, http.StatusOK, rec.Code)
+	assert.Equal(t, "foobar", rec.Body.String())
+	assert.Equal(t, "batman", rec.Header().Get("X-post"))
 }

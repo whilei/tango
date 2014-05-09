@@ -2,23 +2,23 @@
 package tangoappengine
 
 import (
-    "github.com/cojac/tango"
+	"github.com/unrolled/tango"
 )
 
 type IndexHandler struct{ tango.BaseHandler }
 
 func (h *IndexHandler) New() tango.HandlerInterface {
-    return &IndexHandler{}
+	return &IndexHandler{}
 }
 
 func (h *IndexHandler) Get(request *tango.HttpRequest) *tango.HttpResponse {
-    return tango.NewHttpResponse("Hello, appengine.")
+	return tango.NewHttpResponse("Hello, appengine.")
 }
 
 func init() {
-    tango.Settings.Set("debug", true)
+	tango.Settings.Set("debug", true)
 
-    tango.Pattern("/", &IndexHandler{})
+	tango.Pattern("/", &IndexHandler{})
 }
 
 // For AppEngine, just leave out the main func().
