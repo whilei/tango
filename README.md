@@ -1,1 +1,1 @@
-While this framework does indeed work, it should be considered stale and not production ready. I've started using and contributing to [Martini](https://github.com/go-martini/martini). I suggest you check it out, it's full of awesome.
+While this framework does indeed work, it should be considered stale and not production ready. I'd suggest you check out [Negroni ](https://github.com/codegangsta/negroni).
