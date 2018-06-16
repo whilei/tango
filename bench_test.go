@@ -2,63 +2,63 @@
 package tango
 
 import (
-    "fmt"
-    "net/http"
-    "net/http/httptest"
-    "testing"
+	"fmt"
+	"net/http"
+	"net/http/httptest"
+	"testing"
 )
 
 //---
 type IndexHandler struct {
-    BaseHandler
-    BenchMixin
+	BaseHandler
+	BenchMixin
 }
 
 func (h *IndexHandler) New() HandlerInterface {
-    return &IndexHandler{}
+	return &IndexHandler{}
 }
 func (h *IndexHandler) Get(request *HttpRequest) *HttpResponse {
-    passedId, _ := request.PathValue(":id")
-    return NewHttpResponse(fmt.Sprintf("Hello, world: %s | %s", passedId, h.TesterStr))
+	passedId, _ := request.PathValue(":id")
+	return NewHttpResponse(fmt.Sprintf("Hello, world: %s | %s", passedId, h.TesterStr))
 }
 
 //---
 type Benchware struct{ BaseMiddleware }
 
 func (m *Benchware) ProcessRequest(request *HttpRequest) *HttpResponse {
-    request.Header.Set("X-pre", "superman")
+	request.Header.Set("X-pre", "superman")
 
-    return nil
+	return nil
 }
 
 func (m *Benchware) ProcessResponse(request *HttpRequest, response *HttpResponse) {
-    response.Header.Set("X-post", request.Header.Get("X-pre"))
+	response.Header.Set("X-post", request.Header.Get("X-pre"))
 }
 
 //---
 type BenchMixin struct {
-    BaseMixin
-    TesterStr string
+	BaseMixin
+	TesterStr string
 }
 
 func (m *BenchMixin) PrepareBenchMixin() {
-    m.TesterStr = "superman"
+	m.TesterStr = "superman"
 }
 
 func (m *BenchMixin) FinishBenchMixin() {
-    m.TesterStr = "batman"
+	m.TesterStr = "batman"
 }
 
 //---
 func BenchmarkTango(b *testing.B) {
-    Pattern("/hello/:id", &IndexHandler{})
-    Middleware(&Benchware{})
-    Mixin(&BaseMixin{})
+	Pattern("/hello/:id", &IndexHandler{})
+	Middleware(&Benchware{})
+	Mixin(&BaseMixin{})
 
-    for i := 0; i < b.N; i++ {
-        url := fmt.Sprintf("/hello/%d", i)
-        rec := httptest.NewRecorder()
-        request, _ := http.NewRequest("GET", url, nil)
-        Mux.ServeHTTP(rec, request)
-    }
+	for i := 0; i < b.N; i++ {
+		url := fmt.Sprintf("/hello/%d", i)
+		rec := httptest.NewRecorder()
+		request, _ := http.NewRequest("GET", url, nil)
+		Mux.ServeHTTP(rec, request)
+	}
 }
